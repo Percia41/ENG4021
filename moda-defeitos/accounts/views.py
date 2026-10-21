@@ -1,12 +1,15 @@
 from django.contrib import messages
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.views import LoginView
 from django.db import IntegrityError
 from django.shortcuts import redirect, render
+from django.urls import reverse
 
 from .forms import (
-    BrandRegistrationForm, BuyerRegistrationForm, EmailAuthenticationForm,
-    SellerRegistrationForm,
+    AccountProfileForm, BrandRegistrationForm, BuyerRegistrationForm,
+    EmailAuthenticationForm, SellerRegistrationForm,
 )
 
 
@@ -20,6 +23,9 @@ class AccountLoginView(LoginView):
         expiry = settings.SESSION_COOKIE_AGE if form.cleaned_data['remember'] else 0
         self.request.session.set_expiry(expiry)
         return response
+
+    def get_success_url(self):
+        return reverse('home')
 
 
 def register(request, role):
@@ -48,3 +54,23 @@ def password_reset_page(request):
 def account_type_page(request):
     return render(request, 'core/login/account_type.html')
 
+
+@login_required
+def account_page(request):
+    form = AccountProfileForm(request.user)
+    if request.method == 'POST':
+        form = AccountProfileForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            if form.cleaned_data['password']:
+                update_session_auth_hash(request, user)
+            messages.success(request, 'Seus dados foram atualizados.')
+            return redirect('account_page')
+
+    profile = getattr(request.user, 'profile', None)
+    display_name = request.user.get_full_name() or request.user.username
+    return render(request, 'accounts/account.html', {
+        'form': form,
+        'profile': profile,
+        'initials': display_name[:2].upper(),
+    })

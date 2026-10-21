@@ -16,6 +16,14 @@
     gap: 20px;
 }
 
+.site-header__actions,
+.site-header__actions form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
 .hero {
     padding: 54px 0 32px;
 }
@@ -122,5 +130,11 @@
         min-height: 44px;
         padding-inline: 12px;
         font-size: 13px;
+    }
+
+    .site-header__actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 6px;
     }
 }

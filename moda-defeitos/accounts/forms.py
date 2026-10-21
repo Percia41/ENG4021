@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.db import transaction
@@ -53,6 +54,7 @@ class BuyerRegistrationForm(UserCreationForm):
         self.fields['name'].widget.attrs['autocomplete'] = 'name'
         self.fields['email'].widget.attrs['autocomplete'] = 'email'
         self.fields['phone'].widget.attrs['autocomplete'] = 'tel'
+        self.fields['password'].widget.attrs['autocomplete'] = 'new-password'
 
     def clean_email(self):
         email = self.cleaned_data['email'].lower()
@@ -127,3 +129,65 @@ class BrandRegistrationForm(SellerRegistrationForm):
             'store_name', 'document', 'legal_name', 'segment', 'location',
             'name', 'email', 'phone', 'social', 'password1', 'password2', 'terms',
         ]
+
+
+class AccountProfileForm(forms.Form):
+    name = forms.CharField(label='Nome completo', max_length=150)
+    email = forms.EmailField(label='E-mail', max_length=150)
+    phone = forms.CharField(label='Celular', max_length=20, required=False)
+    password = forms.CharField(
+        label='Nova senha',
+        required=False,
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
+        help_text='Opcional. Deixe em branco para manter a senha atual.',
+    )
+    store_name = forms.CharField(label='Loja ou marca', max_length=120, required=False)
+    location = forms.CharField(label='Cidade e estado', max_length=120, required=False)
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        self.profile = getattr(user, 'profile', None)
+        super().__init__(*args, **kwargs)
+        self.initial.setdefault('name', user.get_full_name() or user.username)
+        self.initial.setdefault('email', user.email)
+        self.initial.setdefault('phone', self.profile.phone if self.profile else '')
+        self.initial.setdefault('store_name', self.profile.store_name if self.profile else '')
+        self.initial.setdefault('location', self.profile.location if self.profile else '')
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
+            field.widget.attrs['autocomplete'] = 'off'
+        self.fields['name'].widget.attrs['autocomplete'] = 'name'
+        self.fields['email'].widget.attrs['autocomplete'] = 'email'
+        self.fields['phone'].widget.attrs['autocomplete'] = 'tel'
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip().lower()
+        users = get_user_model().objects.filter(
+            Q(email__iexact=email) | Q(username__iexact=email)
+        ).exclude(pk=self.user.pk)
+        if users.exists():
+            raise forms.ValidationError('Este e-mail já está associado a outra conta.')
+        return email
+
+    def clean_password(self):
+        password = self.cleaned_data['password']
+        if password:
+            validate_password(password, user=self.user)
+        return password
+
+    @transaction.atomic
+    def save(self):
+        self.user.first_name = self.cleaned_data['name'].strip()
+        self.user.email = self.cleaned_data['email']
+        self.user.username = self.cleaned_data['email']
+        if self.cleaned_data['password']:
+            self.user.set_password(self.cleaned_data['password'])
+        self.user.save()
+
+        if not self.profile:
+            self.profile = UserProfile(user=self.user)
+        self.profile.phone = self.cleaned_data['phone'].strip()
+        self.profile.store_name = self.cleaned_data['store_name'].strip()
+        self.profile.location = self.cleaned_data['location'].strip()
+        self.profile.save()
+        return self.user
