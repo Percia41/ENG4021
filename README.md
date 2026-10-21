@@ -377,6 +377,10 @@ O cadastro demonstra o fluxo completo de um CRUD: o produto é definido em
 `core/models.py`, preenchido por um `ModelForm`, processado pelas views e
 apresentado pelos templates HTML com CSS.
 
-Ainda não foram implementados classificação de defeitos, cálculo de desconto,
-imagens, autenticação própria ou categorias complexas. Essas partes poderão ser
-desenvolvidas nas próximas etapas do projeto.
+Os models também incluem critérios de severidade, cálculo de desconto e dados
+de imagens, categorias, carrinho e pedidos. A integração desses recursos nas
+telas ainda está em andamento.
+
+O cadastro de compradores, vendedores e marcas é processado pelo app `accounts`,
+com validação dos dados, senha protegida e criação do perfil no banco. Após
+atualizar o código, execute `python manage.py migrate` dentro de `moda-defeitos`.

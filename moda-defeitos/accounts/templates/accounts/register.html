@@ -1,0 +1,26 @@
+{% extends 'core/login/base.html' %}
+{% load static %}
+
+{% block title %}Cadastro | FioFora{% endblock %}
+
+{% block login_styles %}
+<link rel="stylesheet" href="{% static 'core/login/register.css' %}">
+{% endblock %}
+
+{% block top_action %}
+<a class="back-link" href="{% url 'account_type_page' %}">← Voltar</a>
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <p class="eyebrow">Cadastro · Etapa 2 de 2</p>
+    <h1>{{ title }}</h1>
+    <p class="form-intro">Preencha seus dados para criar uma conta.</p>
+    <form class="form-stack" method="post">
+        {% csrf_token %}
+        {% include 'accounts/includes/form_fields.html' %}
+        <button class="button button--full" type="submit">Criar conta</button>
+    </form>
+    <p class="form-switch">Já tem uma conta? <a href="{% url 'login_page' %}">Entrar</a></p>
+</div>
+{% endblock %}

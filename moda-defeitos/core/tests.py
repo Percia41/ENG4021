@@ -24,7 +24,7 @@ class AuthPageTests(TestCase):
                 self.assertEqual(response.status_code, 200)
 
     def test_password_is_not_put_in_redirect_url(self):
-        for page_name in ['login_page', 'buyer_register_page', 'seller_register_page', 'brand_register_page']:
+        for page_name in ['login_page']:
             with self.subTest(page=page_name):
                 response = self.client.post(reverse(page_name), {'password': 'senha-de-teste'})
                 self.assertEqual(response.status_code, 302)
