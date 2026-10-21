@@ -1,3 +1,9 @@
+.form-row .password-reset-link {
+    font-size: 11px;
+    font-weight: 400;
+    text-decoration: underline;
+}
+
 .form-switch {
     margin: 25px 0;
     color: var(--muted);
