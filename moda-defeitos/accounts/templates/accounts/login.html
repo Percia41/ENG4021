@@ -1,0 +1,24 @@
+{% extends 'core/login/base.html' %}
+{% load static %}
+
+{% block title %}Entrar | FioFora{% endblock %}
+
+{% block login_styles %}
+<link rel="stylesheet" href="{% static 'core/login/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <p class="eyebrow">Boas-vindas de volta</p>
+    <h1>Entre na sua conta</h1>
+    <p class="form-intro">Use o e-mail e a senha cadastrados.</p>
+    <form class="form-stack" method="post">
+        {% csrf_token %}
+        {% include 'accounts/includes/form_fields.html' %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <a href="{% url 'password_reset_page' %}">Esqueci minha senha</a>
+        <button class="button button--full" type="submit">Entrar</button>
+    </form>
+    <p class="form-switch">Ainda não tem uma conta? <a href="{% url 'account_type_page' %}">Cadastre-se</a></p>
+</div>
+{% endblock %}

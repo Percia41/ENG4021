@@ -1,8 +1,25 @@
 from django.contrib import messages
+from django.conf import settings
+from django.contrib.auth.views import LoginView
 from django.db import IntegrityError
 from django.shortcuts import redirect, render
 
-from .forms import BrandRegistrationForm, BuyerRegistrationForm, SellerRegistrationForm
+from .forms import (
+    BrandRegistrationForm, BuyerRegistrationForm, EmailAuthenticationForm,
+    SellerRegistrationForm,
+)
+
+
+class AccountLoginView(LoginView):
+    template_name = 'accounts/login.html'
+    authentication_form = EmailAuthenticationForm
+    redirect_authenticated_user = True
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        expiry = settings.SESSION_COOKIE_AGE if form.cleaned_data['remember'] else 0
+        self.request.session.set_expiry(expiry)
+        return response
 
 
 def register(request, role):
@@ -24,15 +41,10 @@ def register(request, role):
     return render(request, 'accounts/register.html', {'form': form, 'title': title})
 
 
-def login_page(request):
-    if request.method == 'POST':
-        return redirect('home')
-    return render(request, 'core/login/login.html')
-
-
 def password_reset_page(request):
     return render(request, 'core/login/password_reset.html', {'demo_notice': request.method == 'POST'})
 
 
 def account_type_page(request):
     return render(request, 'core/login/account_type.html')
+
