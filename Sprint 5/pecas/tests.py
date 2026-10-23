@@ -75,3 +75,64 @@ class ViewsTests(TestCase):
     def test_produto_inexistente_retorna_404(self):
         response = self.client.get(reverse("pecas:produto", args=[999]))
         self.assertEqual(response.status_code, 404)
+
+
+class FiltroSeveridadeTests(TestCase):
+    def setUp(self):
+        self.leve = criar_peca(nome="Peça Leve")  # severidade 1,00
+        self.moderada = criar_peca(  # 2,00
+            nome="Peça Moderada", tipo_defeito=2, localizacao_defeito=2, extensao_defeito=2
+        )
+        self.alta = criar_peca(  # 3,00
+            nome="Peça Alta", tipo_defeito=3, localizacao_defeito=3, extensao_defeito=3
+        )
+
+    def nomes(self, faixa=None):
+        url = reverse("pecas:lista")
+        response = self.client.get(url, {"faixa": faixa} if faixa is not None else {})
+        self.assertEqual(response.status_code, 200)
+        return {p.nome for p in response.context["pecas"]}
+
+    def test_sem_filtro_mostra_todas(self):
+        self.assertEqual(self.nomes(), {"Peça Leve", "Peça Moderada", "Peça Alta"})
+
+    def test_filtra_cada_faixa(self):
+        self.assertEqual(self.nomes("leve"), {"Peça Leve"})
+        self.assertEqual(self.nomes("moderada"), {"Peça Moderada"})
+        self.assertEqual(self.nomes("alta"), {"Peça Alta"})
+
+    def test_faixa_invalida_mostra_todas(self):
+        self.assertEqual(self.nomes("qualquer"), {"Peça Leve", "Peça Moderada", "Peça Alta"})
+
+    def test_limites_exatos_das_faixas(self):
+        limite_leve = criar_peca(  # 1,70 -> Leve
+            nome="Limite Leve", tipo_defeito=1, localizacao_defeito=3, extensao_defeito=1
+        )
+        limite_moderada = criar_peca(  # 2,30 -> Moderada
+            nome="Limite Moderada", tipo_defeito=3, localizacao_defeito=1, extensao_defeito=3
+        )
+        self.assertEqual(limite_leve.severidade, Decimal("1.70"))
+        self.assertEqual(limite_moderada.severidade, Decimal("2.30"))
+        self.assertIn("Limite Leve", self.nomes("leve"))
+        self.assertIn("Limite Moderada", self.nomes("moderada"))
+        self.assertNotIn("Limite Moderada", self.nomes("alta"))
+
+    def test_filtro_do_banco_bate_com_a_faixa_do_modelo(self):
+        for t in (1, 2, 3):
+            for loc in (1, 2, 3):
+                for ext in (1, 2, 3):
+                    criar_peca(tipo_defeito=t, localizacao_defeito=loc, extensao_defeito=ext)
+        for faixa in ("leve", "moderada", "alta"):
+            do_banco = {p.pk for p in Peca.objects.com_faixa(faixa)}
+            esperado = {p.pk for p in Peca.objects.all() if p.faixa == faixa}
+            self.assertEqual(do_banco, esperado, faixa)
+
+    def test_faixa_sem_pecas_mostra_aviso(self):
+        Peca.objects.filter(pk=self.alta.pk).delete()
+        response = self.client.get(reverse("pecas:lista"), {"faixa": "alta"})
+        self.assertContains(response, "Nenhuma peça nessa faixa")
+
+    def test_filtro_aparece_na_vitrine_com_faixa_ativa(self):
+        response = self.client.get(reverse("pecas:lista"), {"faixa": "moderada"})
+        self.assertContains(response, 'href="?faixa=leve"')
+        self.assertContains(response, 'class="chip moderada active"')

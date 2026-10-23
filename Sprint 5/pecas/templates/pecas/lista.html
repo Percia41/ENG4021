@@ -6,6 +6,14 @@
   <h1 class="page-title serif">Peças com pequenos defeitos</h1>
   <p class="page-sub">Cada desconto é calculado pela gravidade real do defeito.</p>
 
+  <nav class="filters" aria-label="Filtrar por severidade">
+    <span class="filters-label">Severidade:</span>
+    <a class="chip{% if not faixa_ativa %} active{% endif %}" href="{% url 'pecas:lista' %}"{% if not faixa_ativa %} aria-current="true"{% endif %}>Todas</a>
+    {% for valor, rotulo in faixas %}
+      <a class="chip {{ valor }}{% if faixa_ativa == valor %} active{% endif %}" href="?faixa={{ valor }}"{% if faixa_ativa == valor %} aria-current="true"{% endif %}><span class="severity-dot"></span>{{ rotulo }}</a>
+    {% endfor %}
+  </nav>
+
   {% if pecas %}
     <div class="grid">
       {% for peca in pecas %}
@@ -24,6 +32,8 @@
         </a>
       {% endfor %}
     </div>
+  {% elif faixa_ativa %}
+    <div class="empty">Nenhuma peça nessa faixa de severidade. <a href="{% url 'pecas:lista' %}">Ver todas as peças</a></div>
   {% else %}
     <div class="empty">Nenhuma peça cadastrada ainda. Cadastre peças pelo painel em /admin/.</div>
   {% endif %}
