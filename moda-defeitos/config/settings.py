@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'accounts.apps.AccountsConfig',
 ]
 
 MIDDLEWARE = [
@@ -99,11 +100,19 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
 TIME_ZONE = 'UTC'
 
@@ -126,3 +135,9 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+# Chaves consistentes com a migração original do projeto.
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# Origem usada pelo encaminhamento local do Codespaces.
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = ["https://localhost:8000"]

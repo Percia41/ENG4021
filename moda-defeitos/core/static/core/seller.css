@@ -1,0 +1,43 @@
+/* Área do vendedor e simulador: Sprint 6, Pessoa 5. */
+.seller-heading { padding: 52px 0 34px; }
+.eyebrow { color: #b65f46; text-transform: uppercase; letter-spacing: .15em; font-size: 12px; }
+.seller-heading h1 { margin: 15px 0; color: var(--green); font: 400 clamp(36px, 6vw, 64px)/1.1 Georgia, serif; }
+.seller-heading h1 em { color: #b65f46; font-weight: 400; }
+.seller-heading > p:last-child { color: var(--muted); max-width: 650px; }
+.seller-layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 28px; align-items: start; margin-bottom: 60px; }
+.seller-panel, .seller-note { padding: 30px; border: 1px solid var(--line); border-radius: var(--radius-medium); }
+.seller-panel { background: var(--white); }
+.seller-panel h2, .seller-note h2 { margin: 0 0 14px; color: var(--green); font: 400 30px/1.2 Georgia, serif; }
+.seller-panel > p, .seller-note > p { color: var(--muted); line-height: 1.6; }
+.seller-note { background: #edece3; }
+.seller-note .eyebrow { color: #b65f46; }
+.seller-panel .product-form { margin-top: 24px; }
+.seller-panel .form-field { min-width: 0; }
+.seller-panel textarea { resize: vertical; }
+.seller-panel input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--green); }
+.seller-panel .checkbox-field .form-control { min-height: 18px; }
+.seller-panel .form-check { align-items: center; }
+.seller-message { background: #e7eee2; border: 1px solid #c5d1bb; padding: 16px; border-radius: 8px; }
+.severity-badge { display: inline-block; padding: 6px 10px; color: #42573d; background: #e7eddf; border-radius: 30px; font-size: 13px; }
+.piece-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 22px; font-size: 12px; color: var(--muted); }
+.my-products-grid { margin-top: 24px; }
+.my-products-grid .product-card { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.my-products-grid .card-actions { margin-top: auto; padding-top: 15px; }
+.original-price { font-size: 14px; text-decoration: line-through; }
+.discount-value { font-size: 60px !important; margin-top: 25px !important; }
+.discount-value span { display: block; font: 400 18px/1.5 sans-serif; }
+.price-breakdown { margin: 30px 0; }
+.price-breakdown > div { display: flex; justify-content: space-between; gap: 12px; padding: 16px 0; border-bottom: 1px solid #d3d6c8; }
+.price-breakdown dd { margin: 0; font-weight: 600; white-space: nowrap; }
+.price-breakdown .final-price { color: var(--green); font-size: 20px; }
+.seller-pagination { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; margin-bottom: 40px; }
+.site-header__inner { flex-wrap: wrap; }
+.site-header__actions { flex-wrap: wrap; }
+@media (max-width: 760px) {
+    .seller-layout { grid-template-columns: 1fr; }
+    .seller-panel, .seller-note { padding: 22px; }
+    .seller-heading { padding-top: 32px; }
+    .section-heading { flex-wrap: wrap; }
+    .site-header__actions { justify-content: flex-start; }
+    .price-breakdown .final-price { font-size: 17px; }
+}

@@ -1,0 +1,31 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block page_styles %}
+<link rel="stylesheet" href="{% static 'core/products.css' %}">
+<link rel="stylesheet" href="{% static 'core/seller.css' %}">
+{% endblock %}
+{% block page_body %}
+<header class="site-header">
+    <div class="container site-header__inner">
+        <a class="brand-logo" href="{% url 'home' %}" aria-label="FioFora — vitrine">
+            {% include 'core/components/logo.html' %}
+        </a>
+        <nav class="site-header__actions" aria-label="Área do vendedor">
+            <a href="{% url 'home' %}">Vitrine</a>
+            <a href="{% url 'discount_simulator' %}">Simulador</a>
+            {% if request.user.is_authenticated %}
+            {% if request.user.is_staff or request.user.profile.role == 'seller' or request.user.profile.role == 'brand' %}
+            <a href="{% url 'my_products' %}">Minhas peças</a>
+            <a class="button" href="{% url 'seller_product_create' %}">Cadastrar peça</a>
+            {% endif %}
+            <a href="{% url 'account_page' %}">Minha conta</a>
+            {% else %}
+            <a class="button" href="{% url 'login_page' %}">Entrar</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+<main class="container">
+    {% block content %}{% endblock %}
+</main>
+{% endblock %}

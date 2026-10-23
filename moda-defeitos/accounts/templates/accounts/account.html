@@ -1,0 +1,114 @@
+{% extends 'core/products/base.html' %}
+{% load static %}
+
+{% block title %}Perfil | FioFora{% endblock %}
+
+{% block page_styles %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'accounts/css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="account-layout">
+    <aside class="account-sidebar" aria-label="Navegação da conta">
+        <div class="account-identity">
+            <span class="account-avatar" aria-hidden="true">{{ initials }}</span>
+            <div>
+                <h2>{{ request.user.get_full_name|default:request.user.username }}</h2>
+                <p>{{ profile.get_role_display|default:'Conta' }}</p>
+            </div>
+        </div>
+        <nav class="account-navigation">
+            <a class="is-current" href="#profile-details" aria-current="page">Perfil</a>
+            {% if profile and profile.role != 'buyer' %}
+            <a href="#business-details">Loja ou marca</a>
+            {% endif %}
+        </nav>
+        <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button class="account-logout" type="submit">Sair da conta</button>
+        </form>
+    </aside>
+
+    <section class="account-main" aria-labelledby="account-title">
+        <header class="account-heading">
+            <div>
+                <p class="account-eyebrow">Minha conta</p>
+                <h1 id="account-title">Perfil</h1>
+                <p class="account-intro">Mantenha seus dados pessoais e de contato atualizados.</p>
+            </div>
+            <span class="account-status">Conta ativa</span>
+        </header>
+
+        {% for message in messages %}
+        <p class="account-message" role="status">{{ message }}</p>
+        {% endfor %}
+
+        <form method="post" class="account-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+            <section class="account-card" id="profile-details">
+                <div class="account-card-heading">
+                    <div>
+                        <h2>Dados pessoais</h2>
+                        <p>Essas informações não aparecem publicamente.</p>
+                    </div>
+                    {% if profile %}<span class="account-role">{{ profile.get_role_display }}</span>{% endif %}
+                </div>
+                <div class="account-fields">
+                    <div class="form-field">
+                        <label class="field-label" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                        {{ form.name }}
+                        {% for error in form.name.errors %}<span class="form-errors">{{ error }}</span>{% endfor %}
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label" for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                        {{ form.email }}
+                        {% for error in form.email.errors %}<span class="form-errors">{{ error }}</span>{% endfor %}
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label" for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
+                        {{ form.phone }}
+                        {% for error in form.phone.errors %}<span class="form-errors">{{ error }}</span>{% endfor %}
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label" for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+                        {{ form.password }}
+                        <span class="field-help">{{ form.password.help_text }}</span>
+                        {% for error in form.password.errors %}<span class="form-errors">{{ error }}</span>{% endfor %}
+                    </div>
+                </div>
+            </section>
+
+            {% if profile and profile.role != 'buyer' %}
+            <section class="account-card" id="business-details">
+                <div class="account-card-heading">
+                    <div>
+                        <h2>Loja e localização</h2>
+                        <p>Dados da sua conta de vendedor ou marca.</p>
+                    </div>
+                </div>
+                <div class="account-fields account-fields--business">
+                    <div class="form-field">
+                        <label class="field-label" for="{{ form.store_name.id_for_label }}">{{ form.store_name.label }}</label>
+                        {{ form.store_name }}
+                        {% for error in form.store_name.errors %}<span class="form-errors">{{ error }}</span>{% endfor %}
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label" for="{{ form.location.id_for_label }}">{{ form.location.label }}</label>
+                        {{ form.location }}
+                        {% for error in form.location.errors %}<span class="form-errors">{{ error }}</span>{% endfor %}
+                    </div>
+                </div>
+            </section>
+            {% endif %}
+
+            <div class="account-actions">
+                <a class="button button--secondary" href="{% url 'home' %}">Cancelar</a>
+                <button class="button" type="submit">Salvar alterações</button>
+            </div>
+        </form>
+
+    </section>
+</div>
+{% endblock %}

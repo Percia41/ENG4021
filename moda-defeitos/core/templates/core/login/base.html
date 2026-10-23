@@ -34,6 +34,9 @@
             </div>
 
             <div class="form-panel__content">
+                {% for message in messages %}
+                <p class="field-help" role="status">{{ message }}</p>
+                {% endfor %}
                 {% block content %}{% endblock %}
             </div>
         </section>

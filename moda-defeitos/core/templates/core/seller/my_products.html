@@ -1,0 +1,44 @@
+{% extends 'core/seller/base.html' %}
+{% block title %}Minhas peças | FioFora{% endblock %}
+{% block content %}
+<section class="seller-heading">
+    <p class="eyebrow">Área do vendedor</p>
+    <h1>Minhas <em>peças.</em></h1>
+    <p>Gerencie as peças que você cadastrou e acompanhe os valores dos seus anúncios.</p>
+</section>
+{% for message in messages %}<p class="seller-message" role="status">{{ message }}</p>{% endfor %}
+<div class="section-heading">
+    <h2>{{ page_obj.paginator.count }} peça{{ page_obj.paginator.count|pluralize:"s" }} cadastrada{{ page_obj.paginator.count|pluralize:"s" }}</h2>
+    <a class="button" href="{% url 'seller_product_create' %}">Cadastrar peça</a>
+</div>
+{% if page_obj %}
+<section class="product-grid my-products-grid">
+    {% for product in page_obj %}
+    <article class="product-card">
+        <div class="piece-meta"><span class="severity-badge">{{ product.severity_label }}</span><span>{% if product.is_active %}Na vitrine{% else %}Inativa{% endif %}</span></div>
+        <p class="eyebrow">{{ product.brand|default:'Marca não informada' }}</p>
+        <h3>{{ product.name }}</h3>
+        <p>{{ product.description|truncatechars:140 }}</p>
+        {% if product.size %}<p>Tamanho {{ product.size }}</p>{% endif %}
+        {% if product.original_price %}<p class="original-price">Original: R$ {{ product.original_price|floatformat:2 }}</p>{% endif %}
+        <p class="price">R$ {{ product.price|floatformat:2 }}</p>
+        <p class="field-help">Preço anunciado · estoque: {{ product.stock }}</p>
+
+    </article>
+    {% endfor %}
+</section>
+{% if page_obj.has_other_pages %}
+<nav class="seller-pagination" aria-label="Páginas de minhas peças">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">← Anterior</a>{% endif %}
+    <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Próxima →</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+<section class="empty-state">
+    <h2>Sua próxima história começa aqui.</h2>
+    <p>Você ainda não cadastrou peças. Cadastre a primeira e dê uma nova chance à moda.</p>
+    <a class="button" href="{% url 'seller_product_create' %}">Cadastrar primeira peça</a>
+</section>
+{% endif %}
+{% endblock %}

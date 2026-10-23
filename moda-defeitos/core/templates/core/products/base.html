@@ -11,7 +11,18 @@
         <a class="brand-logo" href="{% url 'home' %}" aria-label="FioFora — vitrine">
             {% include 'core/components/logo.html' %}
         </a>
-        <a class="button" href="{% url 'product_create' %}">Novo produto</a>
+        <div class="site-header__actions">
+            <a class="button" href="{% url 'product_create' %}">Novo produto</a>
+            {% if request.user.is_authenticated %}
+            <a class="button" href="{% url 'account_page' %}">Minha conta</a>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button class="button" type="submit">Sair</button>
+            </form>
+            {% else %}
+            <a class="button" href="{% url 'login_page' %}">Entrar</a>
+            {% endif %}
+        </div>
     </div>
 </header>
 <main class="container">

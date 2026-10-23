@@ -1,0 +1,250 @@
+.account-layout {
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    gap: 38px;
+    max-width: 1060px;
+    margin: 52px auto 72px;
+}
+
+.account-sidebar {
+    align-self: start;
+    padding-top: 8px;
+}
+
+.account-identity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 4px 22px;
+    border-bottom: 1px solid var(--line);
+}
+
+.account-avatar {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 auto;
+    place-items: center;
+    color: var(--coral);
+    background: var(--ink);
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.account-identity h2 {
+    margin: 0 0 4px;
+    font-size: 14px;
+}
+
+.account-identity p,
+.account-card-heading p,
+.account-intro {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.account-navigation {
+    display: grid;
+    gap: 5px;
+    padding: 16px 0;
+}
+
+.account-navigation a,
+.account-logout {
+    min-height: 42px;
+    padding: 11px 13px;
+    color: var(--muted);
+    border: 0;
+    border-radius: var(--radius-medium);
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    text-decoration: none;
+}
+
+.account-navigation a:hover,
+.account-navigation .is-current {
+    color: var(--ink);
+    background: #e8e9e2;
+}
+
+.account-sidebar form {
+    margin: 8px 0 0;
+}
+
+.account-logout {
+    color: var(--coral);
+    cursor: pointer;
+}
+
+.account-logout:hover {
+    background: #f2e7e1;
+}
+
+.account-main {
+    min-width: 0;
+}
+
+.account-heading,
+.account-card-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.account-heading {
+    margin-bottom: 24px;
+}
+
+.account-eyebrow {
+    margin: 0 0 5px;
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.account-heading h1 {
+    margin: 0 0 7px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(34px, 4vw, 44px);
+    font-weight: 400;
+}
+
+.account-status,
+.account-role {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 13px;
+    color: var(--green);
+    background: #e8ece5;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.account-form {
+    display: grid;
+    gap: 14px;
+}
+
+.account-card {
+    padding: 22px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-large);
+}
+
+.account-card-heading {
+    margin-bottom: 19px;
+}
+
+.account-card-heading h2 {
+    margin: 0 0 5px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.account-card-heading p {
+    font-size: 12px;
+}
+
+.account-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 17px 16px;
+}
+
+.account-fields .form-control {
+    min-height: 44px;
+    padding: 10px 13px;
+}
+
+.account-fields .field-help {
+    margin-bottom: 6px;
+    line-height: 1.5;
+}
+
+.account-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 2px;
+}
+
+.button--secondary {
+    color: var(--ink);
+    background: var(--white);
+    border: 1px solid var(--line);
+}
+
+.button--secondary:hover {
+    background: #efebe4;
+}
+
+.account-message {
+    margin: 0 0 14px;
+    padding: 12px 15px;
+    color: var(--green);
+    background: #e8ece5;
+    border-radius: var(--radius-medium);
+    font-size: 14px;
+}
+
+@media (max-width: 760px) {
+    .account-layout {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        margin: 28px auto 48px;
+    }
+
+    .account-sidebar {
+        padding: 0;
+    }
+
+    .account-identity {
+        padding-bottom: 14px;
+    }
+
+    .account-navigation {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 10px 0;
+    }
+
+    .account-sidebar form {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 520px) {
+    .account-heading,
+    .account-card-heading {
+        align-items: flex-start;
+    }
+
+    .account-heading {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .account-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .account-card {
+        padding: 17px;
+    }
+
+    .account-actions {
+        flex-wrap: wrap;
+    }
+}
