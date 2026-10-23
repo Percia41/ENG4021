@@ -1,6 +1,36 @@
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.db import models
+from django.db.models import ExpressionWrapper, F, IntegerField
+
+
+class PecaQuerySet(models.QuerySet):
+    def com_faixa(self, faixa):
+        """Filtra no banco pela faixa de severidade ("leve", "moderada" ou "alta").
+
+        Usa a mesma fórmula e os mesmos limites de `Peca.severidade` e `Peca.faixa`,
+        em centésimos (inteiros), para não haver erro de arredondamento.
+        """
+        peca = self.model
+        centesimos = ExpressionWrapper(
+            F("tipo_defeito") * int(peca.PESO_TIPO * 100)
+            + F("localizacao_defeito") * int(peca.PESO_LOCAL * 100)
+            + F("extensao_defeito") * int(peca.PESO_EXTENSAO * 100),
+            output_field=IntegerField(),
+        )
+        qs = self.annotate(severidade_centesimos=centesimos)
+        limite_leve = int(peca.LIMITE_LEVE * 100)
+        limite_moderada = int(peca.LIMITE_MODERADA * 100)
+        if faixa == "leve":
+            return qs.filter(severidade_centesimos__lte=limite_leve)
+        if faixa == "moderada":
+            return qs.filter(
+                severidade_centesimos__gt=limite_leve,
+                severidade_centesimos__lte=limite_moderada,
+            )
+        if faixa == "alta":
+            return qs.filter(severidade_centesimos__gt=limite_moderada)
+        return self
 
 
 class Vendedor(models.Model):
@@ -47,6 +77,17 @@ class Peca(models.Model):
     PESO_LOCAL = Decimal("0.35")
     PESO_EXTENSAO = Decimal("0.20")
 
+    # Faixas: Leve até 1,70 · Moderada até 2,30 · Alta acima de 2,30
+    LIMITE_LEVE = Decimal("1.70")
+    LIMITE_MODERADA = Decimal("2.30")
+    FAIXA_CHOICES = [
+        ("leve", "Leve"),
+        ("moderada", "Moderada"),
+        ("alta", "Alta"),
+    ]
+
+    objects = PecaQuerySet.as_manager()
+
     vendedor = models.ForeignKey(Vendedor, on_delete=models.CASCADE, related_name="pecas")
     nome = models.CharField(max_length=150)
     tamanho = models.CharField(max_length=10)
@@ -83,9 +124,9 @@ class Peca(models.Model):
     @property
     def faixa(self):
         s = self.severidade
-        if s <= Decimal("1.70"):
+        if s <= self.LIMITE_LEVE:
             return "leve"
-        if s <= Decimal("2.30"):
+        if s <= self.LIMITE_MODERADA:
             return "moderada"
         return "alta"
 

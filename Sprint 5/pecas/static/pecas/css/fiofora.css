@@ -133,6 +133,23 @@ h1.title{ font-size:25px; margin:4px 0 12px; font-weight:500; }
 /* Vitrine */
 .page-title{ font-size:25px; font-weight:500; margin:0 0 4px; }
 .page-sub{ font-size:13.5px; color:var(--ink-soft); margin:0 0 28px; }
+/* Filtro de severidade */
+.filters{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0 0 24px; }
+.filters-label{ font-size:13px; color:var(--ink-soft); margin-right:2px; }
+.chip{
+  display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px;
+  font-size:13px; font-weight:600; color:var(--ink); background:var(--card);
+  border:1px solid var(--line); text-decoration:none;
+}
+.chip:hover{ border-color:var(--forest); }
+.chip:focus-visible{ outline:3px solid var(--forest); outline-offset:2px; }
+.chip.active{ background:var(--forest); border-color:var(--forest); color:#fff; }
+.chip.leve .severity-dot{ background:var(--leve-txt); }
+.chip.moderada .severity-dot{ background:var(--mod-txt); }
+.chip.alta .severity-dot{ background:var(--alta-txt); }
+.chip.active .severity-dot{ background:#fff; }
+.empty a{ color:var(--forest); font-weight:600; }
+
 .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; }
 .card{
   display:block; background:var(--card); border:1px solid var(--line); border-radius:8px;

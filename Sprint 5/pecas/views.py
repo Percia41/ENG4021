@@ -4,9 +4,18 @@ from .models import Peca
 
 
 def lista_pecas(request):
-    """Vitrine: lê as peças do banco de dados e renderiza a tela de listagem."""
-    pecas = Peca.objects.select_related("vendedor")
-    return render(request, "pecas/lista.html", {"pecas": pecas})
+    """Vitrine: lê as peças do banco e permite filtrar por faixa de severidade (?faixa=leve)."""
+    faixa = request.GET.get("faixa", "")
+    if faixa not in dict(Peca.FAIXA_CHOICES):
+        faixa = ""  # valor desconhecido: mostra todas as peças
+
+    pecas = Peca.objects.select_related("vendedor").com_faixa(faixa)
+    contexto = {
+        "pecas": pecas,
+        "faixa_ativa": faixa,
+        "faixas": Peca.FAIXA_CHOICES,
+    }
+    return render(request, "pecas/lista.html", contexto)
 
 
 def produto(request, pk):
