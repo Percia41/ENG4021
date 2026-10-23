@@ -1,0 +1,42 @@
+{% extends 'core/seller/base.html' %}
+{% block title %}{{ title }} | FioFora{% endblock %}
+{% block content %}
+<section class="seller-heading">
+    <p class="eyebrow">Área do vendedor</p>
+    <h1>{{ title }}</h1>
+    <p>Uma nova chance começa com detalhes às claras.</p>
+</section>
+<div class="seller-layout">
+<section class="seller-panel">
+    <h2>Conte a história da peça</h2>
+    <p>Informe o valor original e os três critérios do defeito. Calculamos o preço final ao salvar.</p>
+    <form method="post" class="product-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+        {% for field in form %}
+        <div class="form-field{% if field.field.widget.input_type == 'checkbox' %} checkbox-field{% endif %}">
+            {% if field.field.widget.input_type == 'checkbox' %}
+            <label class="form-check" for="{{ field.id_for_label }}">{{ field }}<span>{{ field.label }}</span></label>
+            {% else %}
+            <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+            {{ field }}
+            {% endif %}
+            {% if field.help_text %}<small class="field-help">{{ field.help_text }}</small>{% endif %}
+            {% for error in field.errors %}<p class="form-errors" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+        <div class="form-actions">
+            <button class="button" type="submit">Salvar peça</button>
+            <a href="{% url 'my_products' %}">Cancelar</a>
+        </div>
+    </form>
+</section>
+<aside class="seller-note">
+    <p class="eyebrow">Preço com transparência</p>
+    <h2>Pequenos defeitos.<br>Novas possibilidades.</h2>
+    <p>Descreva o defeito e sua localização com cuidado. O desconto sugerido segue a mesma regra do simulador.</p>
+    <a class="button button--secondary" href="{% url 'discount_simulator' %}" target="_blank" rel="noopener">Abrir simulador ↗</a>
+    <p class="field-help">O simulador abre em outra aba para preservar seu cadastro.</p>
+</aside>
+</div>
+{% endblock %}

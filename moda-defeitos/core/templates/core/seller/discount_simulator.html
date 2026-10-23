@@ -1,0 +1,44 @@
+{% extends 'core/seller/base.html' %}
+{% block title %}Simulador de desconto | FioFora{% endblock %}
+{% block content %}
+<section class="seller-heading">
+    <p class="eyebrow">Preço justo, explicado</p>
+    <h1>Simule uma <em>nova chance.</em></h1>
+    <p>Veja como os detalhes da peça se transformam em desconto.</p>
+</section>
+<div class="seller-layout">
+<section class="seller-panel">
+    <h2>Detalhes do defeito</h2>
+    <form method="post" class="product-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+        <div class="form-field">
+            <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<p class="form-errors" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+        <button class="button" type="submit">Calcular desconto</button>
+    </form>
+</section>
+<section class="seller-note simulation-result" aria-live="polite" aria-label="Resultado da simulação">
+    {% if result %}
+    <p class="eyebrow">Sua simulação</p>
+    <span class="severity-badge">Severidade {{ result.severity_label }}</span>
+    <h2 class="discount-value">{{ result.discount }}% <span>de desconto</span></h2>
+    <dl class="price-breakdown">
+        <div><dt>Preço original</dt><dd>R$ {{ result.original_price|floatformat:2 }}</dd></div>
+        <div><dt>Nota de severidade</dt><dd>{{ result.severity|floatformat:2 }}</dd></div>
+        <div class="final-price"><dt>Preço final sugerido</dt><dd>R$ {{ result.final_price|floatformat:2 }}</dd></div>
+    </dl>
+    <p>Simulação calculada. Nenhuma peça foi cadastrada.</p>
+    {% else %}
+    <p class="eyebrow">Cada detalhe conta</p>
+    <h2>O imperfeito também merece ser escolhido.</h2>
+    <p>Preencha os critérios e clique em calcular para descobrir a severidade, o desconto e o preço final.</p>
+    {% endif %}
+    <a href="{% url 'seller_product_create' %}">Cadastrar uma peça →</a>
+</section>
+</div>
+{% endblock %}
