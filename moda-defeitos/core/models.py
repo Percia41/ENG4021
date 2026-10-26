@@ -5,6 +5,24 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 
+def severidade(tipo, localizacao, extensao):
+    """Fórmula única de severidade (S = 0,45×Tipo + 0,35×Localização + 0,20×Extensão).
+
+    Compartilhada pelo model Defeito e por qualquer simulação que ainda não
+    tenha uma peça salva, para nunca existir uma segunda cópia da fórmula.
+    """
+    return Decimal("0.45") * tipo + Decimal("0.35") * localizacao + Decimal("0.20") * extensao
+
+
+def classificar_severidade(score):
+    return "Leve" if score <= Decimal("1.70") else "Moderada" if score <= Decimal("2.30") else "Alta"
+
+
+def desconto_sugerido(score):
+    raw = Decimal("15") + (score - 1) / 2 * Decimal("35")
+    return int((raw / 5).quantize(Decimal("1"), rounding=ROUND_HALF_UP) * 5)
+
+
 class UserProfile(models.Model):
     class Role(models.TextChoices):
         BUYER = "buyer", "Comprador"
@@ -61,9 +79,6 @@ class Product(models.Model):
     measurements = models.TextField("medidas", blank=True)
     original_price = models.DecimalField("preço original", max_digits=10, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal("0.01"))])
     stock = models.PositiveIntegerField("estoque", default=1)
-    defect_type = models.PositiveSmallIntegerField("tipo do defeito", choices=[(1, "Estético"), (2, "Funcional reparável"), (3, "Funcional não reparável")], default=1, validators=[MinValueValidator(1), MaxValueValidator(3)])
-    defect_location = models.PositiveSmallIntegerField("localização", choices=[(1, "Escondido"), (2, "Semivisível"), (3, "Visível")], default=1, validators=[MinValueValidator(1), MaxValueValidator(3)])
-    defect_extent = models.PositiveSmallIntegerField("extensão", choices=[(1, "Pequena"), (2, "Média"), (3, "Grande")], default=1, validators=[MinValueValidator(1), MaxValueValidator(3)])
     defect_measure_cm = models.DecimalField("medida do defeito (cm)", max_digits=6, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     visible_when_worn = models.BooleanField("visível com a peça vestida", default=False)
 
@@ -74,22 +89,21 @@ class Product(models.Model):
         constraints = [
             models.CheckConstraint(condition=models.Q(price__gt=0), name="product_price_positive"),
             models.CheckConstraint(condition=models.Q(original_price__isnull=True) | models.Q(original_price__gte=models.F("price")), name="product_original_gte_price"),
-            models.CheckConstraint(condition=models.Q(defect_type__range=(1, 3)) & models.Q(defect_location__range=(1, 3)) & models.Q(defect_extent__range=(1, 3)), name="product_valid_defect_scores"),
             models.CheckConstraint(condition=models.Q(defect_measure_cm__isnull=True) | models.Q(defect_measure_cm__gte=0), name="product_nonnegative_measure"),
         ]
 
     @property
     def severity(self):
-        return Decimal("0.45") * self.defect_type + Decimal("0.35") * self.defect_location + Decimal("0.20") * self.defect_extent
+        # Tipo, localização e extensão agora vivem no model Defeito (ligado 1-para-1 à peça).
+        return self.defeito.severity
 
     @property
     def severity_label(self):
-        return "Leve" if self.severity <= Decimal("1.70") else "Moderada" if self.severity <= Decimal("2.30") else "Alta"
+        return classificar_severidade(self.severity)
 
     @property
     def suggested_discount(self):
-        raw = Decimal("15") + (self.severity - 1) / 2 * Decimal("35")
-        return int((raw / 5).quantize(Decimal("1"), rounding=ROUND_HALF_UP) * 5)
+        return desconto_sugerido(self.severity)
 
     @property
     def suggested_price(self):
@@ -99,6 +113,46 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Defeito(models.Model):
+    """Defeito de fabricação de uma peça: tipo, localização e extensão.
+
+    Antes esses três critérios eram campos soltos em Product. Agora formam
+    seu próprio model, ligado 1-para-1 à peça, o que deixa claro que o
+    defeito é uma entidade própria (com sua nota de severidade) e não só um
+    detalhe a mais do cadastro de produto.
+    """
+
+    TIPO_CHOICES = [(1, "Estético"), (2, "Funcional reparável"), (3, "Funcional não reparável")]
+    LOCALIZACAO_CHOICES = [(1, "Escondido"), (2, "Semivisível"), (3, "Visível")]
+    EXTENSAO_CHOICES = [(1, "Pequena"), (2, "Média"), (3, "Grande")]
+
+    product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name="defeito", verbose_name="peça")
+    tipo = models.PositiveSmallIntegerField("tipo do defeito", choices=TIPO_CHOICES, default=1, validators=[MinValueValidator(1), MaxValueValidator(3)])
+    localizacao = models.PositiveSmallIntegerField("localização", choices=LOCALIZACAO_CHOICES, default=1, validators=[MinValueValidator(1), MaxValueValidator(3)])
+    extensao = models.PositiveSmallIntegerField("extensão", choices=EXTENSAO_CHOICES, default=1, validators=[MinValueValidator(1), MaxValueValidator(3)])
+
+    class Meta:
+        verbose_name = "defeito"
+        verbose_name_plural = "defeitos"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(tipo__range=(1, 3)) & models.Q(localizacao__range=(1, 3)) & models.Q(extensao__range=(1, 3)),
+                name="defeito_valid_scores",
+            ),
+        ]
+
+    def __str__(self):
+        return f"Defeito de {self.product.name}"
+
+    @property
+    def severity(self):
+        return severidade(self.tipo, self.localizacao, self.extensao)
+
+    @property
+    def severity_label(self):
+        return classificar_severidade(self.severity)
 
 
 class ProductImage(models.Model):

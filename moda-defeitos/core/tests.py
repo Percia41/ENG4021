@@ -57,7 +57,7 @@ from io import StringIO
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.db import IntegrityError, transaction
-from .models import (UserProfile, Product, Category, ProductImage, Favorite,
+from .models import (UserProfile, Product, Defeito, Category, ProductImage, Favorite,
                      Cart, CartItem, Order, OrderItem)
 
 
@@ -133,13 +133,14 @@ class Sprint5Tests(TestCase):
         with self.assertRaises(IntegrityError), transaction.atomic():
             CartItem.objects.filter(pk=CartItem.objects.first().pk).update(quantity=0)
         with self.assertRaises(IntegrityError), transaction.atomic():
-            Product.objects.filter(pk=product.pk).update(defect_type=4)
+            Defeito.objects.filter(product=product).update(tipo=4)
         with self.assertRaises(IntegrityError), transaction.atomic():
             Product.objects.filter(pk=product.pk).update(price=Decimal("0.00"))
 
     def test_discount_reference_scenarios(self):
         for scores, severity, discount in [((1,1,1), "1.00", 15), ((1,3,2), "1.90", 30), ((2,3,1), "2.15", 35), ((3,3,1), "2.60", 45)]:
-            product = Product(defect_type=scores[0], defect_location=scores[1], defect_extent=scores[2], original_price=Decimal("100.00"))
+            product = Product(original_price=Decimal("100.00"))
+            product.defeito = Defeito(tipo=scores[0], localizacao=scores[1], extensao=scores[2])
             self.assertEqual(product.severity, Decimal(severity))
             self.assertEqual(product.suggested_discount, discount)
             self.assertEqual(product.suggested_price, Decimal(100-discount))

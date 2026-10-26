@@ -30,6 +30,7 @@ def product_create(request):
         product = form.save(commit=False)
         product.seller = request.user
         product.save()
+        form.save_defeito(product)
         messages.success(request, 'Peça cadastrada com sucesso.')
         return redirect('my_products')
     return render(request, 'core/seller/product_form.html', {'form': form, 'title': 'Cadastrar peça'})
@@ -37,7 +38,7 @@ def product_create(request):
 
 @seller_required
 def my_products(request):
-    products = Product.objects.filter(seller=request.user).select_related('category').order_by('-created_at', '-pk')
+    products = Product.objects.filter(seller=request.user).select_related('category', 'defeito').order_by('-created_at', '-pk')
     page = Paginator(products, 12).get_page(request.GET.get('page'))
     return render(request, 'core/seller/my_products.html', {'page_obj': page})
 

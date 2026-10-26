@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from core.models import (UserProfile, Category, Product, ProductImage,
+from core.models import (UserProfile, Category, Product, Defeito, ProductImage,
                          Favorite, Cart, CartItem, Order, OrderItem)
 
 
@@ -46,16 +46,17 @@ class Command(BaseCommand):
         ]
         products = []
         for index, (name, desc, category, size, original, kind, location, extent, seller) in enumerate(pieces, 1):
-            candidate = Product(name=name, description=desc, original_price=Decimal(original),
-                                defect_type=kind, defect_location=location, defect_extent=extent)
+            candidate = Product(name=name, description=desc, original_price=Decimal(original))
+            candidate.defeito = Defeito(tipo=kind, localizacao=location, extensao=extent)
             product, _ = Product.objects.get_or_create(sku=f"FF-DEMO-{index:03}", defaults={
                 "name": name, "description": desc, "price": candidate.suggested_price,
                 "original_price": candidate.original_price, "seller": users[seller],
                 "category": categories[category], "brand": users[seller].profile.store_name,
                 "size": size, "condition": "Nova com defeito", "stock": 5,
-                "defect_type": kind, "defect_location": location, "defect_extent": extent,
                 "defect_measure_cm": Decimal("4.00") if extent == 2 else Decimal("1.00"),
                 "visible_when_worn": location == 3})
+            Defeito.objects.get_or_create(product=product, defaults={
+                "tipo": kind, "localizacao": location, "extensao": extent})
             for defect in (False, True):
                 path = "core/images/demo-defect.svg" if defect else "core/images/demo-piece.svg"
                 ProductImage.objects.get_or_create(product=product, image_path=path, defaults={
