@@ -1,0 +1,74 @@
+{% extends 'core/products/base.html' %}
+
+{% block title %}Carrinho | FioFora{% endblock %}
+
+{% block content %}
+<section class="hero cart-hero">
+    <h1>Seu carrinho</h1>
+    <p>Confira as peças, o defeito de cada uma e o valor antes de seguir.</p>
+</section>
+
+{% if messages %}
+<div class="cart-messages" role="status">
+    {% for message in messages %}
+    <p class="cart-message{% if message.tags %} cart-message--{{ message.tags }}{% endif %}">{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if lines %}
+<div class="cart-layout">
+    <section class="cart-items" aria-label="Itens do carrinho">
+        {% for line in lines %}
+        <article class="cart-item{% if line.problem %} cart-item--unavailable{% endif %}">
+            <div class="cart-item__info">
+                <p class="eyebrow">{{ line.product.brand|default:'Marca não informada' }}{% if line.product.size %} · Tamanho {{ line.product.size }}{% endif %}</p>
+                <h2>{{ line.product.name }}</h2>
+                <p class="cart-item__defect"><strong>Defeito:</strong> {{ line.product.description|truncatechars:140 }}</p>
+                <p class="cart-item__unit">R$ {{ line.product.price|floatformat:2 }} por unidade</p>
+                {% if line.problem %}
+                <p class="cart-item__warning" role="alert">{{ line.problem }} Este item não entra no total.</p>
+                {% endif %}
+            </div>
+
+            <div class="cart-item__controls">
+                <form class="cart-quantity-form" method="post" action="{% url 'cart_update_item' line.item.id %}">
+                    {% csrf_token %}
+                    <label class="field-label" for="quantity-{{ line.item.id }}">Quantidade</label>
+                    <div class="cart-quantity-form__row">
+                        <input class="form-control cart-quantity-input" id="quantity-{{ line.item.id }}" name="quantity" type="number" inputmode="numeric" min="1" max="{{ line.max_quantity }}" value="{{ line.item.quantity }}" required>
+                        <button class="button" type="submit">Atualizar</button>
+                    </div>
+                </form>
+                <p class="cart-item__subtotal"><span>Subtotal</span> R$ {{ line.subtotal|floatformat:2 }}</p>
+                <form method="post" action="{% url 'cart_remove_item' line.item.id %}">
+                    {% csrf_token %}
+                    <button class="cart-remove" type="submit" aria-label="Remover {{ line.product.name }} do carrinho">Remover</button>
+                </form>
+            </div>
+        </article>
+        {% endfor %}
+    </section>
+
+    <aside class="cart-summary" aria-label="Resumo do pedido">
+        <h2>Resumo</h2>
+        <dl>
+            <div><dt>Peças</dt><dd>{{ pieces }}</dd></div>
+            <div><dt>Subtotal</dt><dd>R$ {{ total|floatformat:2 }}</dd></div>
+            <div class="cart-summary__total"><dt>Total</dt><dd>R$ {{ total|floatformat:2 }}</dd></div>
+        </dl>
+        {% if has_unavailable %}
+        <p class="field-help">Itens indisponíveis ficam de fora do total. Ajuste a quantidade ou remova-os.</p>
+        {% endif %}
+        {# Membro 5: o botão "Finalizar compra" (checkout demonstrativo) entra aqui. #}
+        <a class="cart-continue" href="{% url 'home' %}">Continuar comprando</a>
+    </aside>
+</div>
+{% else %}
+<section class="empty-state cart-empty">
+    <h2>Seu carrinho está vazio</h2>
+    <p>Escolha uma peça na vitrine e ela aparece aqui, com o defeito e o preço bem explicados.</p>
+    <a class="button" href="{% url 'home' %}">Ver a vitrine</a>
+</section>
+{% endif %}
+{% endblock %}
