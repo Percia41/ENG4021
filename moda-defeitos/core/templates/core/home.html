@@ -25,6 +25,17 @@
                 <a href="{% url 'product_update' product.id %}">Editar</a>
                 <a class="danger-link" href="{% url 'product_delete' product.id %}">Remover</a>
             </div>
+            {% if product.stock < 1 %}
+            <p class="cart-add-form stock-out">Peça esgotada</p>
+            {% elif request.user.is_authenticated %}
+            <form class="cart-add-form" method="post" action="{% url 'cart_add' product.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="quantity" value="1">
+                <button class="button" type="submit">Adicionar ao carrinho</button>
+            </form>
+            {% else %}
+            <p class="cart-add-form"><a class="button" href="{% url 'login_page' %}">Entrar para comprar</a></p>
+            {% endif %}
         </div>
     </article>
     {% endfor %}

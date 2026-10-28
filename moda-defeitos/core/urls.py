@@ -1,9 +1,13 @@
 from django.urls import path
 
-from . import views, seller_views
+from . import views, seller_views, cart_views
 
 
 urlpatterns = [
+    path('carrinho/', cart_views.cart_page, name='cart_page'),
+    path('carrinho/adicionar/<int:product_id>/', cart_views.cart_add, name='cart_add'),
+    path('carrinho/itens/<int:item_id>/quantidade/', cart_views.cart_update_item, name='cart_update_item'),
+    path('carrinho/itens/<int:item_id>/remover/', cart_views.cart_remove_item, name='cart_remove_item'),
     path('pecas/cadastrar/', seller_views.product_create, name='seller_product_create'),
     path('minhas-pecas/', seller_views.my_products, name='my_products'),
     path('simulador/', seller_views.discount_simulator, name='discount_simulator'),
