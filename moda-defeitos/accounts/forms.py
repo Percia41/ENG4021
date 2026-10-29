@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import authenticate, get_user_model
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, SetPasswordForm, UserCreationForm
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -191,3 +191,18 @@ class AccountProfileForm(forms.Form):
         self.profile.location = self.cleaned_data['location'].strip()
         self.profile.save()
         return self.user
+
+
+class EmailPasswordResetForm(PasswordResetForm):
+    """Pede o e-mail da conta; o Django só envia se existir uma conta ativa com ele."""
+    email = forms.EmailField(label='E-mail', max_length=150, widget=forms.EmailInput(attrs={
+        'class': 'form-control', 'autocomplete': 'email', 'autofocus': True, 'placeholder': 'voce@exemplo.com',
+    }))
+
+
+class StyledSetPasswordForm(SetPasswordForm):
+    """Tela de nova senha, com os mesmos estilos dos demais formulários."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'

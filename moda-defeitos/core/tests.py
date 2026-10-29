@@ -30,10 +30,6 @@ class AuthPageTests(TestCase):
                 self.assertEqual(response.status_code, 302)
                 self.assertNotIn('senha-de-teste', response['Location'])
 
-    def test_password_reset_does_not_claim_email_was_sent(self):
-        response = self.client.post(reverse('password_reset_page'), {'email': 'teste@exemplo.com'})
-        self.assertContains(response, 'nenhum e-mail foi enviado')
-
     def test_product_form_uses_shared_controls(self):
         response = self.client.get(reverse('product_create'))
         self.assertContains(response, 'class="form-control"', count=3)
