@@ -2,14 +2,16 @@ from django.contrib import messages
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import (
+    LoginView, PasswordResetCompleteView, PasswordResetConfirmView, PasswordResetDoneView, PasswordResetView,
+)
 from django.db import IntegrityError
 from django.shortcuts import redirect, render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 
 from .forms import (
     AccountProfileForm, BrandRegistrationForm, BuyerRegistrationForm,
-    EmailAuthenticationForm, SellerRegistrationForm,
+    EmailAuthenticationForm, EmailPasswordResetForm, SellerRegistrationForm, StyledSetPasswordForm,
 )
 
 
@@ -47,8 +49,44 @@ def register(request, role):
     return render(request, 'accounts/register.html', {'form': form, 'title': title})
 
 
-def password_reset_page(request):
-    return render(request, 'core/login/password_reset.html', {'demo_notice': request.method == 'POST'})
+class PasswordResetRequestView(PasswordResetView):
+    """1) O usuário informa o e-mail e recebe o link com o token."""
+    template_name = 'core/login/password_reset.html'
+    form_class = EmailPasswordResetForm
+    email_template_name = 'accounts/email/password_reset_email.txt'
+    subject_template_name = 'accounts/email/password_reset_subject.txt'
+    success_url = reverse_lazy('password_reset_done')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['expiry_minutes'] = settings.PASSWORD_RESET_TIMEOUT // 60
+        return context
+
+    def form_valid(self, form):
+        self.extra_email_context = {'expiry_minutes': settings.PASSWORD_RESET_TIMEOUT // 60}
+        return super().form_valid(form)
+
+
+class PasswordResetSentView(PasswordResetDoneView):
+    """2) Aviso de envio. A mensagem é a mesma exista ou não a conta, para não revelar quem tem cadastro."""
+    template_name = 'core/login/password_reset_done.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['expiry_minutes'] = settings.PASSWORD_RESET_TIMEOUT // 60
+        return context
+
+
+class PasswordResetNewPasswordView(PasswordResetConfirmView):
+    """3) Link do e-mail: valida o token (e a expiração) e pede a nova senha."""
+    template_name = 'core/login/password_reset_confirm.html'
+    form_class = StyledSetPasswordForm
+    success_url = reverse_lazy('password_reset_complete')
+
+
+class PasswordResetFinishedView(PasswordResetCompleteView):
+    """4) Confirmação de que a senha foi trocada."""
+    template_name = 'core/login/password_reset_complete.html'
 
 
 def account_type_page(request):

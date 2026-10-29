@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -135,6 +136,21 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+# E-mail (recuperação de senha).
+# Por padrão o e-mail é impresso no terminal do runserver, sem enviar nada de verdade.
+# Para enviar de verdade, defina as variáveis EMAIL_BACKEND, EMAIL_HOST, EMAIL_PORT,
+# EMAIL_HOST_USER e EMAIL_HOST_PASSWORD no ambiente.
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '25'))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', '') == '1'
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'FioFora <nao-responda@fiofora.local>')
+
+# O link de recuperação de senha vale por 1 hora (em segundos) e só pode ser usado uma vez.
+PASSWORD_RESET_TIMEOUT = 60 * 60
 
 # Chaves consistentes com a migração original do projeto.
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
