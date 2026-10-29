@@ -1,0 +1,48 @@
+{% extends 'core/products/base.html' %}
+
+{% block title %}Meus favoritos | FioFora{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Meus favoritos</h1>
+    <p>As peças que você guardou para ver com calma.</p>
+</section>
+
+{% for message in messages %}<p class="flash-message" role="status">{{ message }}</p>{% endfor %}
+
+<div class="section-heading">
+    <h2>Peças favoritas</h2>
+    <span>{{ favorites|length }} item(ns)</span>
+</div>
+
+{% if favorites %}
+<section class="product-grid">
+    {% for favorite in favorites %}
+    {% with product=favorite.product %}
+    <article class="product-card">
+        <div class="product-card-content">
+            <p class="eyebrow">{{ product.brand|default:'Marca não informada' }}</p>
+            <h3>{{ product.name }}</h3>
+            <p><strong>Defeito:</strong> {{ product.description|truncatechars:140 }}</p>
+            {% if product.original_price %}<p class="original-price">Original: R$ {{ product.original_price|floatformat:2 }}</p>{% endif %}
+            <p class="price">R$ {{ product.price|floatformat:2 }}</p>
+            {% if not product.is_active %}<p class="field-help">Esta peça saiu da vitrine.</p>{% endif %}
+            <div class="card-actions">
+                <form action="{% url 'favorite_remove' product.id %}" method="post">
+                    {% csrf_token %}
+                    <button class="favorite-button is-active" type="submit" aria-label="Remover {{ product.name }} dos favoritos"><i class="bi bi-heart-fill" aria-hidden="true"></i> Remover</button>
+                </form>
+            </div>
+        </div>
+    </article>
+    {% endwith %}
+    {% endfor %}
+</section>
+{% else %}
+<section class="empty-state">
+    <h2>Você ainda não favoritou nenhuma peça</h2>
+    <p>Na vitrine, toque em "Favoritar" nas peças que gostar e elas aparecem aqui.</p>
+    <a class="button" href="{% url 'home' %}">Ver a vitrine</a>
+</section>
+{% endif %}
+{% endblock %}

@@ -8,6 +8,8 @@
     <p>Veja o produto, o defeito e o preço de forma transparente.</p>
 </section>
 
+{% for message in messages %}<p class="flash-message" role="status">{{ message }}</p>{% endfor %}
+
 <div class="section-heading">
     <h2>Produtos disponíveis</h2>
     <span>{{ products|length }} item(ns)</span>
@@ -22,6 +24,21 @@
             <p><strong>Defeito:</strong> {{ product.description }}</p>
             <p class="price">R$ {{ product.price }}</p>
             <div class="card-actions">
+                {% if request.user.is_authenticated %}
+                {% if product.id in favorite_ids %}
+                <form action="{% url 'favorite_remove' product.id %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button class="favorite-button is-active" type="submit" aria-label="Remover {{ product.name }} dos favoritos"><i class="bi bi-heart-fill" aria-hidden="true"></i> Favoritada</button>
+                </form>
+                {% else %}
+                <form action="{% url 'favorite_add' product.id %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button class="favorite-button" type="submit" aria-label="Adicionar {{ product.name }} aos favoritos"><i class="bi bi-heart" aria-hidden="true"></i> Favoritar</button>
+                </form>
+                {% endif %}
+                {% endif %}
                 <a href="{% url 'product_update' product.id %}">Editar</a>
                 <a class="danger-link" href="{% url 'product_delete' product.id %}">Remover</a>
             </div>
