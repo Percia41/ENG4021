@@ -12,7 +12,7 @@
 
 <div class="section-heading">
     <h2>Peças favoritas</h2>
-    <span>{{ favorites|length }} item(ns)</span>
+    <span>{{ favorites|length }} {{ favorites|length|pluralize:"item,itens" }}</span>
 </div>
 
 {% if favorites %}
