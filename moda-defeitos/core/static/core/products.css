@@ -138,3 +138,28 @@
         gap: 6px;
     }
 }
+
+.favorite-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    color: var(--green);
+    background: none;
+    border: 0;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.favorite-button.is-active {
+    color: #b0413e;
+}
+
+.flash-message {
+    padding: 12px 14px;
+    color: var(--green);
+    background: #e7eee5;
+    border-radius: var(--radius-medium);
+    font-size: 14px;
+}

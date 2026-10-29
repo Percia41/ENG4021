@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, seller_views, cart_views
+from . import views, seller_views, cart_views, favorite_views
 
 
 urlpatterns = [
@@ -8,6 +8,9 @@ urlpatterns = [
     path('carrinho/adicionar/<int:product_id>/', cart_views.cart_add, name='cart_add'),
     path('carrinho/itens/<int:item_id>/quantidade/', cart_views.cart_update_item, name='cart_update_item'),
     path('carrinho/itens/<int:item_id>/remover/', cart_views.cart_remove_item, name='cart_remove_item'),
+    path('favoritos/', favorite_views.favorites_list, name='favorites'),
+    path('favoritos/adicionar/<int:product_id>/', favorite_views.favorite_add, name='favorite_add'),
+    path('favoritos/remover/<int:product_id>/', favorite_views.favorite_remove, name='favorite_remove'),
     path('pecas/cadastrar/', seller_views.product_create, name='seller_product_create'),
     path('minhas-pecas/', seller_views.my_products, name='my_products'),
     path('simulador/', seller_views.discount_simulator, name='discount_simulator'),

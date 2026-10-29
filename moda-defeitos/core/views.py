@@ -5,12 +5,15 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ProductForm
-from .models import Product, UserProfile
+from .models import Favorite, Product, UserProfile
 
 
 def home(request):
     products = Product.objects.filter(is_active=True)
-    return render(request, 'core/home.html', {'products': products})
+    favorite_ids = set()
+    if request.user.is_authenticated:
+        favorite_ids = set(Favorite.objects.filter(user=request.user).values_list('product_id', flat=True))
+    return render(request, 'core/home.html', {'products': products, 'favorite_ids': favorite_ids})
 
 
 def product_create(request):
