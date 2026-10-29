@@ -12,7 +12,7 @@
 
 <div class="section-heading">
     <h2>Produtos disponíveis</h2>
-    <span>{{ products|length }} item(ns)</span>
+    <span>{{ products|length }} {{ products|length|pluralize:"item,itens" }}</span>
 </div>
 
 {% if products %}
