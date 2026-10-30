@@ -384,3 +384,5 @@ telas ainda está em andamento.
 O cadastro de compradores, vendedores e marcas é processado pelo app `accounts`,
 com validação dos dados, senha protegida e criação do perfil no banco. Após
 atualizar o código, execute `python manage.py migrate` dentro de `fio-fora`.
+
+Última revisão deste README: 30/10/2026.
