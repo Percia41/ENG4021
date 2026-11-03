@@ -169,3 +169,55 @@
     flex-wrap: wrap;
     gap: 8px 16px;
 }
+
+/* Selos e preços compartilhados pela vitrine, página da peça e área do vendedor. */
+.eyebrow { color: #b65f46; text-transform: uppercase; letter-spacing: .15em; font-size: 12px; }
+.severity-badge { display: inline-block; padding: 6px 10px; color: #42573d; background: #e7eddf; border-radius: 30px; font-size: 13px; }
+.severity-badge--moderada { color: #7a5a16; background: #f4e9cf; }
+.severity-badge--alta { color: #8a3a2b; background: #f5ddd5; }
+.severity-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+.severity-dot--moderada { background: #c8962e; }
+.severity-dot--alta { background: var(--coral); }
+.original-price { font-size: 14px; text-decoration: line-through; }
+.price-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.price-row .original-price { color: var(--muted); }
+.discount-tag { color: var(--coral); font-size: 13px; font-weight: 700; }
+.product-card .eyebrow { margin: 0 0 6px; }
+.product-card-link { color: inherit; text-decoration: none; }
+.product-card-link:hover { text-decoration: underline; }
+
+/* Filtro da vitrine por faixa de severidade. */
+.severity-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 26px; color: var(--muted); font-size: 14px; }
+.filter-chip { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; color: var(--ink); background: var(--white); border: 1px solid var(--line); border-radius: 30px; text-decoration: none; }
+.filter-chip:hover { border-color: var(--green); }
+.filter-chip.is-active { color: var(--white); background: var(--ink); border-color: var(--ink); }
+
+/* Página da peça. */
+.back-link { display: inline-flex; align-items: center; gap: 6px; margin: 28px 0 20px; color: var(--muted); text-decoration: none; }
+.product-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; align-items: start; padding-bottom: 60px; }
+.product-gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.product-photo { position: relative; margin: 0; overflow: hidden; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-medium); }
+.product-photo:first-child { grid-column: 1 / -1; }
+.product-photo img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+.product-photo--defect { border-color: var(--coral); }
+.product-photo figcaption { position: absolute; left: 10px; bottom: 10px; padding: 4px 10px; color: var(--white); background: var(--coral); border-radius: 30px; font-size: 12px; font-weight: 700; }
+.product-photo--empty { grid-column: 1 / -1; display: grid; place-items: center; aspect-ratio: 4 / 5; color: var(--muted); }
+.product-info h1 { margin: 6px 0 16px; font: 400 clamp(30px, 4vw, 44px)/1.1 Georgia, "Times New Roman", serif; }
+.product-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.repair-badge { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; color: var(--green); border: 1px solid #c5d1bb; border-radius: 30px; font-size: 13px; }
+.worn-note { color: var(--muted); font-size: 14px; }
+.defect-card { margin: 22px 0; padding: 20px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-medium); }
+.defect-card h2 { margin: 0 0 14px; font-size: 16px; }
+.defect-card > p { margin-bottom: 0; color: var(--muted); }
+.defect-grid, .product-specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 14px; margin: 0; }
+.defect-grid dt, .product-specs dt { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.defect-grid dd, .product-specs dd { margin: 4px 0 0; font-weight: 700; }
+.product-specs { margin: 22px 0; }
+.product-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+.product-actions form { margin: 0; }
+.seller-card { display: grid; gap: 4px; margin-top: 26px; padding: 18px 20px; border: 1px solid var(--line); border-radius: var(--radius-medium); }
+.seller-card .eyebrow { margin: 0; }
+
+@media (max-width: 760px) {
+    .product-detail { grid-template-columns: 1fr; gap: 24px; }
+}

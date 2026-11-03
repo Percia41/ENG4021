@@ -5,15 +5,37 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ProductForm
-from .models import Favorite, Product, UserProfile
+from .models import FAIXAS_SEVERIDADE, Favorite, Product, UserProfile
+
+
+def favorite_ids_for(user):
+    if not user.is_authenticated:
+        return set()
+    return set(Favorite.objects.filter(user=user).values_list('product_id', flat=True))
 
 
 def home(request):
-    products = Product.objects.filter(is_active=True)
-    favorite_ids = set()
-    if request.user.is_authenticated:
-        favorite_ids = set(Favorite.objects.filter(user=request.user).values_list('product_id', flat=True))
-    return render(request, 'core/home.html', {'products': products, 'favorite_ids': favorite_ids})
+    band = request.GET.get('faixa', '')
+    if band not in dict(FAIXAS_SEVERIDADE):
+        band = ''  # faixa desconhecida: mostra todas as peças
+    products = Product.objects.filter(is_active=True).select_related('defeito')
+    if band:
+        products = products.with_severity_band(band)
+    return render(request, 'core/home.html', {
+        'products': products, 'favorite_ids': favorite_ids_for(request.user),
+        'bands': FAIXAS_SEVERIDADE, 'active_band': band,
+    })
+
+
+def product_detail(request, product_id):
+    product = get_object_or_404(
+        Product.objects.filter(is_active=True).select_related('defeito', 'category', 'seller__profile')
+        .prefetch_related('images'),
+        id=product_id,
+    )
+    return render(request, 'core/products/detail.html', {
+        'product': product, 'is_favorite': product.id in favorite_ids_for(request.user),
+    })
 
 
 def product_create(request):

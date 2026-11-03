@@ -3,6 +3,15 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models import ExpressionWrapper, F
+
+
+PESO_TIPO = Decimal("0.45")
+PESO_LOCALIZACAO = Decimal("0.35")
+PESO_EXTENSAO = Decimal("0.20")
+LIMITE_LEVE = Decimal("1.70")
+LIMITE_MODERADA = Decimal("2.30")
+FAIXAS_SEVERIDADE = [("leve", "Leve"), ("moderada", "Moderada"), ("alta", "Alta")]
 
 
 def severidade(tipo, localizacao, extensao):
@@ -11,11 +20,11 @@ def severidade(tipo, localizacao, extensao):
     Compartilhada pelo model Defeito e por qualquer simulação que ainda não
     tenha uma peça salva, para nunca existir uma segunda cópia da fórmula.
     """
-    return Decimal("0.45") * tipo + Decimal("0.35") * localizacao + Decimal("0.20") * extensao
+    return PESO_TIPO * tipo + PESO_LOCALIZACAO * localizacao + PESO_EXTENSAO * extensao
 
 
 def classificar_severidade(score):
-    return "Leve" if score <= Decimal("1.70") else "Moderada" if score <= Decimal("2.30") else "Alta"
+    return "Leve" if score <= LIMITE_LEVE else "Moderada" if score <= LIMITE_MODERADA else "Alta"
 
 
 def desconto_sugerido(score):
@@ -63,6 +72,30 @@ class Category(models.Model):
         return self.name
 
 
+class ProductQuerySet(models.QuerySet):
+    def with_severity_band(self, band):
+        """Filtra no banco pela faixa de severidade ("leve", "moderada" ou "alta").
+
+        Usa os mesmos pesos e limites de severidade(), em centésimos inteiros,
+        para não haver erro de arredondamento. Peças sem defeito ficam de fora.
+        """
+        score = ExpressionWrapper(
+            F("defeito__tipo") * int(PESO_TIPO * 100)
+            + F("defeito__localizacao") * int(PESO_LOCALIZACAO * 100)
+            + F("defeito__extensao") * int(PESO_EXTENSAO * 100),
+            output_field=models.IntegerField(),
+        )
+        products = self.annotate(severity_cents=score)
+        leve, moderada = int(LIMITE_LEVE * 100), int(LIMITE_MODERADA * 100)
+        if band == "leve":
+            return products.filter(severity_cents__lte=leve)
+        if band == "moderada":
+            return products.filter(severity_cents__gt=leve, severity_cents__lte=moderada)
+        if band == "alta":
+            return products.filter(severity_cents__gt=moderada)
+        raise ValueError(f"Faixa de severidade desconhecida: {band!r}")
+
+
 class Product(models.Model):
     # Campos originais preservados para manter o CRUD existente funcionando.
     name = models.CharField("nome", max_length=120)
@@ -81,6 +114,8 @@ class Product(models.Model):
     stock = models.PositiveIntegerField("estoque", default=1)
     defect_measure_cm = models.DecimalField("medida do defeito (cm)", max_digits=6, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     visible_when_worn = models.BooleanField("visível com a peça vestida", default=False)
+
+    objects = ProductQuerySet.as_manager()
 
     class Meta:
         ordering = ["-created_at"]
@@ -104,6 +139,17 @@ class Product(models.Model):
     @property
     def suggested_discount(self):
         return desconto_sugerido(self.severity)
+
+    @property
+    def severity_band(self):
+        return self.severity_label.lower()
+
+    @property
+    def discount_percent(self):
+        """Desconto real do anúncio, comparando o preço final com o original."""
+        if not self.original_price or self.original_price <= self.price:
+            return None
+        return int(((1 - self.price / self.original_price) * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
     @property
     def suggested_price(self):
@@ -153,6 +199,10 @@ class Defeito(models.Model):
     @property
     def severity_label(self):
         return classificar_severidade(self.severity)
+
+    @property
+    def is_repairable(self):
+        return self.tipo != 3
 
 
 class ProductImage(models.Model):

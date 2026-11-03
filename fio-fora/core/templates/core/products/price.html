@@ -1,0 +1,5 @@
+<p class="price-row">
+    {% if product.discount_percent %}<span class="original-price">R$ {{ product.original_price|floatformat:2 }}</span>{% endif %}
+    <span class="price">R$ {{ product.price|floatformat:2 }}</span>
+    {% if product.discount_percent %}<span class="discount-tag">{{ product.discount_percent }}% off</span>{% endif %}
+</p>
