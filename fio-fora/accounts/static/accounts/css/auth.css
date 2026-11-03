@@ -23,7 +23,7 @@
     color: var(--white);
     background:
         linear-gradient(180deg, rgba(56, 75, 55, 0.34) 0%, rgba(32, 47, 38, 0.88) 100%),
-        url("../images/clothing-rack.jpg") center / 115% auto no-repeat;
+        url("../images/clothing-rack.jpg") center / cover no-repeat;
 }
 
 .brand-panel__frame {
