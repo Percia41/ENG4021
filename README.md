@@ -95,6 +95,23 @@ python3 --version
 
 Se aparecer a versão do Python, a instalação está pronta.
 
+#### Ubuntu, Pop!_OS e Debian
+
+1. Abra o Terminal.
+2. Instale o Python, o `pip` e o módulo `venv`:
+
+```bash
+sudo apt install python3 python3-pip python3-venv
+```
+
+3. Confirme a instalação:
+
+```bash
+python3 --version
+```
+
+Se aparecer a versão do Python, a instalação está pronta.
+
 ### Inicializar e rodar o projeto
 
 Se você está na pasta `ENG4021`, entre na pasta do projeto:
@@ -132,8 +149,60 @@ python manage.py runserver
 O comando `python manage.py migrate` cria as tabelas internas que o Django
 precisa para funcionar, como as tabelas de usuários, sessões e administração.
 
-Depois, acesse <http://127.0.0.1:8000/> no navegador. Para parar o servidor,
+Depois, acesse <http://127.0.0.1:8000/> no navegador. Essa página é o login;
+a vitrine fica em <http://127.0.0.1:8000/vitrine/>. Para parar o servidor,
 use `Ctrl+C`.
+
+Para entrar no Django Admin (`/admin/`), crie antes um usuário administrador:
+
+```bash
+python manage.py createsuperuser
+```
+
+### Rodar de novo depois da instalação
+
+A instalação só precisa ser feita uma vez. Nas próximas vezes, basta ativar o
+ambiente virtual e iniciar o servidor.
+
+#### Codespace, Linux e macOS
+
+```bash
+cd fio-fora
+source .venv/bin/activate
+python manage.py migrate
+python manage.py runserver
+```
+
+#### Windows (PowerShell)
+
+```powershell
+cd fio-fora
+.venv\Scripts\Activate.ps1
+python manage.py migrate
+python manage.py runserver
+```
+
+Depois de puxar alterações com `git pull`, rode `python manage.py migrate`
+antes do `runserver`, pois outra pessoa pode ter alterado os models.
+
+### Problemas comuns
+
+- **`Command 'python' not found` depois de ativar o `.venv`:** o ambiente
+    virtual foi criado em outra pasta (por exemplo, na antiga `moda-defeitos`).
+    O `.venv` guarda o caminho onde foi criado e não funciona se a pasta for
+    movida ou renomeada. Apague e crie de novo dentro de `fio-fora`:
+
+    ```bash
+    deactivate
+    rm -rf .venv
+    python3 -m venv .venv
+    source .venv/bin/activate
+    python -m pip install -r requirements.txt
+    ```
+
+- **`Error: That port is already in use`:** já existe um servidor rodando em
+    outro terminal. Pare-o com `Ctrl+C` ou use outra porta:
+    `python manage.py runserver 8001`.
 
 ## 2.2 Tecnologias utilizadas
 
@@ -151,177 +220,193 @@ dados, a aparência da página e o código que responde às ações do usuário.
 Esse padrão é realmente usado no Django. A documentação oficial apresenta
 separadamente o model, a view, o template, as URLs e os formulários, e mostra
 como eles trabalham juntos. Veja o exemplo oficial em
-<https://docs.djangoproject.com/en/6.1/intro/overview/>.
+<https://docs.djangoproject.com/en/5.2/intro/overview/>.
 
 ```text
 URL → View → Model/Form → Template → HTML + CSS
 ```
 
-Na Home, a URL chama a `home`, que busca os `Product` e envia a lista para o
-template. No cadastro, a URL chama outra view, que usa o `ProductForm`, salva o
-produto e redireciona para a Home.
+Na vitrine, a URL `/vitrine/` chama a view `home`, que busca os `Product` e
+envia a lista para o template. No cadastro de peça, a URL chama outra view, que
+usa o `ProductForm`, salva a peça e volta para "Minhas peças".
 
 ### Estrutura interna de `fio-fora`
+
+O projeto segue o padrão do tutorial oficial do Django: a pasta `config/` guarda
+só a configuração e cada **app** cuida de uma área do site, com seus próprios
+models, views, URLs, templates, CSS e testes. O que é usado por todas as páginas
+(layout, cabeçalho, CSS geral) fica em `templates/` e `static/` na raiz.
 
 ```text
 fio-fora/
 ├── manage.py                 # Comandos do Django
 ├── requirements.txt          # Dependências do projeto
-├── README.md                 # Guia do projeto
-├── config/                   # Configuração geral do projeto
-│   ├── settings.py           # Configurações e apps instalados
-│   ├── urls.py               # URLs principais do projeto
-│   ├── asgi.py               # Entrada para servidores ASGI
-│   └── wsgi.py               # Entrada para servidores WSGI
-└── core/                     # Aplicação principal
-    ├── models.py             # Modelos e tabelas do sistema
-    ├── views.py              # Lógica das páginas e requisições
-    ├── urls.py               # URLs específicas da aplicação
-    ├── forms.py              # Formulários do Django
-    ├── admin.py              # Registro no Django Admin
-    ├── tests.py              # Testes da aplicação
-    ├── templates/core/       # Páginas HTML
-    ├── static/core/          # Arquivos CSS
-    └── migrations/           # Histórico das alterações dos modelos
+├── config/                   # Configuração geral (settings.py, urls.py, wsgi.py, asgi.py)
+│
+├── templates/                # HTML compartilhado por todas as páginas
+│   ├── base.html             # Estrutura da página: <head>, cabeçalho e mensagens
+│   └── components/           # Pedaços reutilizáveis (incluídos com {% include %})
+│       ├── header.html       # Cabeçalho único, com links conforme o tipo de conta
+│       ├── messages.html     # Mensagens de sucesso e erro
+│       ├── form_fields.html  # Todos os campos de um formulário
+│       ├── field.html        # Um campo de formulário
+│       ├── pagination.html   # Paginação
+│       └── logo.html
+├── static/                   # CSS, fontes e imagens compartilhados
+│   ├── css/                  # site.css importa variables, reset, logo, controls e layout
+│   ├── icons/ e fonts/       # Bootstrap Icons
+│   └── images/               # Logo
+│
+├── accounts/                 # Contas: login, cadastro, perfil, senha e lista de usuários
+│   ├── models.py             # UserProfile (tipo de conta, loja, documento...)
+│   ├── decorators.py         # Quem pode o quê: buyer_required, seller_required
+│   ├── context_processors.py # is_buyer e is_seller disponíveis em todo template
+│   └── backends.py           # Login usando o e-mail
+├── products/                 # Catálogo e área do vendedor
+│   ├── models.py             # Product, Defeito, Category, ProductImage e a fórmula de severidade
+│   ├── forms.py              # ProductForm (cadastrar/editar) e simulador de desconto
+│   └── management/commands/  # popular_banco (dados de exemplo)
+├── cart/                     # Carrinho
+│   └── services.py           # Regras de estoque e total, usadas também no checkout
+├── orders/                   # Checkout e pedidos
+│   └── services.py           # Finalização da compra
+└── favorites/                # Favoritos
+```
+
+Todo app segue o mesmo formato:
+
+```text
+<app>/
+├── models.py, views.py, urls.py, forms.py, admin.py, tests.py
+├── migrations/
+├── templates/<app>/          # HTML do app (o nome do app se repete para evitar conflito)
+│   └── includes/             # Pedaços do app reaproveitados em outras páginas
+└── static/<app>/css/         # CSS do app
 ```
 
 ### O que cada parte faz usando o produto como exemplo
 
 #### 1. `config/settings.py`: configurações do projeto
 
-Esse arquivo diz ao Django quais recursos o projeto usa. É em `settings.py` que ficam
-configurações gerais, como templates, arquivos estáticos e banco de dados.
-Não é o lugar para escrever a lógica do produto.
-
-Exemplo: registrar a aplicação `core`:
+Esse arquivo diz ao Django quais recursos o projeto usa: apps instalados,
+templates, arquivos estáticos e banco de dados. Não é o lugar para escrever a
+lógica do produto.
 
 ```python
 INSTALLED_APPS = [
     # apps do Django...
-    'core',
+    'accounts',
+    'products',
+    'cart',
+    'orders',
+    'favorites',
 ]
 ```
 
-#### 2. `config/urls.py` e `core/urls.py`: caminhos das páginas
+As pastas `templates/` e `static/` da raiz são registradas em `TEMPLATES['DIRS']`
+e `STATICFILES_DIRS`.
 
-As URLs dizem o que deve acontecer quando alguém acessa um endereço.
-`config/urls.py` é a entrada principal e encaminha as URLs da aplicação para
-`core/urls.py`.
+#### 2. `config/urls.py` e `<app>/urls.py`: caminhos das páginas
 
-Por exemplo, em `core/urls.py`, o caminho `/` chama a view da vitrine e o
-caminho `/produtos/novo/` chama a view do cadastro.
+`config/urls.py` é a entrada principal e só encaminha para as URLs de cada app.
+Em `products/urls.py`, por exemplo, `/vitrine/` chama a vitrine e
+`/produtos/novo/` chama o cadastro de peça. O caminho `/` fica em
+`accounts/urls.py` e abre a página de login.
 
 ```python
-path('', views.home, name='home'),
-path('produtos/novo/', views.product_create, name='product_create')
+path('vitrine/', views.home, name='home'),
+path('produtos/novo/', views.product_create, name='product_create'),
 ```
 
-#### 3. `core/models.py`: os dados do produto
+#### 3. `products/models.py`: os dados do produto
 
-O model é uma classe Python que representa um tipo de dado salvo no banco. No
-nosso exemplo, `Product` representa um produto da vitrine:
+O model é uma classe Python que representa um tipo de dado salvo no banco.
+`Product` representa uma peça da vitrine e `Defeito` guarda os três critérios do
+defeito (tipo, localização e extensão), ligado 1-para-1 à peça:
 
 ```python
 class Product(models.Model):
-    name = models.CharField(max_length=120)
-    description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField("nome", max_length=120)
+    description = models.TextField("descrição")
+    price = models.DecimalField("preço final", max_digits=10, decimal_places=2)
+    is_active = models.BooleanField("produto ativo", default=True)
 ```
 
-Cada atributo vira um campo do produto. Assim, `name` guarda o nome, `description`
-guarda a explicação do defeito, `price` guarda o preço e `is_active` informa se
-ele aparece na vitrine. `created_at` registra automaticamente quando o produto
-foi criado.
+A severidade, a faixa (Leve, Moderada, Alta) e o desconto sugerido são
+calculados pelo model, a partir do `Defeito`. Existe uma única fórmula, em
+`severidade()`.
 
-#### 4. `core/forms.py`: formulário para cadastrar o produto
+#### 4. `products/forms.py`: formulário da peça
 
-O `ProductForm` usa o model `Product` para montar um formulário HTML. Quando a
-pessoa digita o nome, o defeito e o preço, o Django verifica os dados e depois
-salva o produto.
-
-Isso evita escrever manualmente toda a validação e mantém o formulário ligado
-ao model. Se um campo for adicionado ao model, podemos incluí-lo no formulário
-pela lista `fields`.
+O `ProductForm` é usado tanto para cadastrar quanto para editar uma peça. O
+vendedor informa o preço original e os critérios do defeito; o preço final é
+calculado pelo model, nunca enviado pelo navegador.
 
 ```python
-class ProductForm(forms.ModelForm):
+class ProductForm(DefectFieldsMixin, forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'description', 'price', 'is_active']
+        fields = ['name', 'brand', 'category', 'description', 'original_price', ...]
 ```
 
-#### 5. `core/views.py`: o que acontece em cada página
+#### 5. `products/views.py`: o que acontece em cada página
 
-A view é uma função Python que recebe a requisição e devolve uma resposta.
-Por exemplo, a view `home` busca os produtos ativos:
+A view recebe a requisição e devolve uma resposta. A vitrine busca as peças
+ativas e envia para o template:
 
 ```python
 products = Product.objects.filter(is_active=True)
-return render(request, 'core/home.html', {'products': products})
+return render(request, 'products/home.html', {'products': products})
 ```
 
-Ela busca os dados no model e envia esses dados para o template. As outras
-views fazem o cadastro, a edição e a remoção de produtos.
-
-No cadastro, a view salva o formulário e volta para a Home:
+As páginas restritas usam os decorators de `accounts/decorators.py`:
 
 ```python
-if form.is_valid():
-    form.save()
-    return redirect('home')
+@seller_required
+def product_create(request):
+    ...
 ```
 
-#### 6. `core/templates/core/`: o HTML que a pessoa vê
+#### 6. Templates: o HTML que a pessoa vê
 
-Os templates são as páginas HTML. Primeiro, o arquivo `base.html` guarda a
-estrutura comum do site, como o cabeçalho e o carregamento do CSS.
-
-Os outros templates reaproveitam essa estrutura usando:
+`templates/base.html` guarda a estrutura comum: o `<head>`, o cabeçalho e as
+mensagens. Cada página herda essa estrutura e preenche o bloco `content`:
 
 ```html
-{% extends 'core/base.html' %}
+{% extends 'base.html' %}
+
+{% block content %}
+    ...
+{% endblock %}
 ```
 
-Assim, não precisamos copiar o mesmo cabeçalho em todas as páginas. Depois, o
-`home.html` recebe a lista `products` enviada pela view e mostra cada produto.
-
-Para mostrar os produtos, o template percorre a lista recebida:
+Os apps que têm CSS próprio têm um `base.html` que só acrescenta esse CSS (por
+exemplo, `products/base.html`). Pedaços repetidos ficam em arquivos próprios e
+são incluídos com `{% include %}`:
 
 ```html
-{% for product in products %}
-    <div class="product-card">
-        <h3>{{ product.name }}</h3>
-        <p><strong>Defeito:</strong> {{ product.description }}</p>
-        <p class="price">R$ {{ product.price }}</p>
-    </div>
-{% endfor %}
+{% include 'components/form_fields.html' %}
+{% include 'products/includes/card_info.html' %}
+{% include 'cart/includes/add_button.html' %}
 ```
 
-#### 7. `core/static/core/style.css`: a aparência da página
+#### 7. CSS: a aparência da página
 
-O CSS define cores, espaçamento, tamanho dos textos e organização dos cards de
-produto. Ele fica separado do Python e do HTML.
+O CSS geral fica em `static/css/` e é carregado em todas as páginas por
+`site.css`. Cada app tem o seu, em `<app>/static/<app>/css/`, por exemplo
+`products/static/products/css/products.css`. No template:
 
-No template, `{% load static %}` e `{% static 'core/style.css' %}` informam ao
-Django onde encontrar esse arquivo. Para mudar a aparência da vitrine, altere
-`core/static/core/style.css`, não `views.py`.
-
-Exemplo de estilo para o preço:
-
-```css
-.price {
-    color: #914936;
-    font-weight: bold;
-}
+```html
+{% load static %}
+<link rel="stylesheet" href="{% static 'products/css/products.css' %}">
 ```
 
-#### 8. `core/admin.py`: gerenciamento pelo Admin
+Os campos dos formulários são estilizados pelo CSS (`.form-field input`), então
+não é preciso colocar classes nos widgets em Python.
 
-Ao registrar `Product` em `admin.py`, o produto pode ser criado, editado e
-removido pela página `/admin/`. O Admin é uma forma rápida de cadastrar e
-organizar os produtos da vitrine.
+#### 8. `admin.py`: gerenciamento pelo Admin
+
+Cada app registra os próprios models em `/admin/`:
 
 ```python
 @admin.register(Product)
@@ -329,21 +414,18 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ['name', 'price', 'is_active']
 ```
 
-#### 9. `core/tests.py`: verificar se o código funciona
+#### 9. `tests.py`: verificar se o código funciona
 
-Os testes simulam ações sem precisar abrir o navegador. Um teste pode conferir,
-por exemplo, se a Home responde com sucesso ou se um produto criado aparece na
-vitrine.
+Cada app tem seus testes em `tests.py`. Eles simulam ações sem abrir o
+navegador. Para rodar todos:
 
-```python
-def test_home_abre(self):
-    response = self.client.get('/')
-    self.assertEqual(response.status_code, 200)
+```bash
+python manage.py test
 ```
 
-#### 10. `core/migrations/`: registrar mudanças no banco
+#### 10. `migrations/`: registrar mudanças no banco
 
-Quando alteramos o model, o Django precisa atualizar a estrutura do banco. Não
+Quando alteramos um model, o Django precisa atualizar a estrutura do banco. Não
 editamos os arquivos dessa pasta manualmente. Usamos:
 
 ```bash
@@ -353,34 +435,21 @@ python manage.py migrate
 
 `makemigrations` registra a mudança e `migrate` aplica a mudança no banco.
 
-`manage.py` reúne os comandos do projeto, como iniciar o servidor, criar
-migrations e executar testes. Ele normalmente não precisa ser alterado.
-
 ## 2.4 Estado atual das funcionalidades
 
-Neste momento, o projeto já possui uma primeira funcionalidade demonstrável:
+- login na página inicial (`/`), cadastro de comprador, vendedor e marca em
+    `/cadastro/`, recuperação de senha em `/recuperar-senha/` e perfil em `/conta/`;
+- vitrine em `/vitrine/`, com filtro por faixa de severidade;
+- página da peça em `/produtos/<id>/`;
+- área do vendedor: `/minhas-pecas/`, cadastro em `/produtos/novo/`, edição em
+    `/produtos/<id>/editar/` e remoção em `/produtos/<id>/remover/`;
+- simulador de desconto em `/simulador/`;
+- carrinho em `/carrinho/`, favoritos em `/favoritos/`, checkout em `/checkout/`
+    e pedidos em `/pedidos/`;
+- lista de usuários para a equipe em `/usuarios/`;
+- gerenciamento pelo Django Admin em `/admin/`;
+- dados de exemplo com `python manage.py popular_banco`.
 
-- estrutura `config` criada pelo comando oficial `django-admin startproject`;
-- aplicação `core` criada pelo comando oficial `python manage.py startapp core`;
-- ambiente virtual criado em `.venv`;
-- Django registrado em `requirements.txt`;
-- app `core` registrado em `INSTALLED_APPS`;
-- migrations aplicadas com `python manage.py migrate`;
-- vitrine na página inicial (`/`), mostrando os produtos ativos;
-- cadastro de produto em `/produtos/novo/`;
-- edição de produto em `/produtos/<id>/editar/`;
-- remoção de produto em `/produtos/<id>/remover/`;
-- gerenciamento dos produtos pelo Django Admin em `/admin/`;
-- verificação básica disponível com `python manage.py check`.
-
-O cadastro demonstra o fluxo completo de um CRUD: o produto é definido em
-`core/models.py`, preenchido por um `ModelForm`, processado pelas views e
-apresentado pelos templates HTML com CSS.
-
-Os models também incluem critérios de severidade, cálculo de desconto e dados
-de imagens, categorias, carrinho e pedidos. A integração desses recursos nas
-telas ainda está em andamento.
-
-O cadastro de compradores, vendedores e marcas é processado pelo app `accounts`,
-com validação dos dados, senha protegida e criação do perfil no banco. Após
-atualizar o código, execute `python manage.py migrate` dentro de `fio-fora`.
+Depois de atualizar o código, execute `python manage.py migrate` dentro de
+`fio-fora`. Se o seu `db.sqlite3` for de antes da divisão em apps, apague-o e
+rode `python manage.py migrate` e `python manage.py popular_banco` de novo.

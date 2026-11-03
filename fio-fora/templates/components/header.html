@@ -1,0 +1,26 @@
+<header class="site-header">
+    <div class="container site-header__inner">
+        <a class="brand-logo" href="{% url 'home' %}" aria-label="FioFora — vitrine">
+            {% include 'components/logo.html' %}
+        </a>
+        <nav class="site-header__actions" aria-label="Navegação principal">
+            <a href="{% url 'home' %}">Vitrine</a>
+            <a href="{% url 'discount_simulator' %}">Simulador</a>
+            {% if is_seller %}
+            <a href="{% url 'my_products' %}">Minhas peças</a>
+            <a class="button" href="{% url 'product_create' %}">Cadastrar peça</a>
+            {% endif %}
+            {% if user.is_authenticated %}
+            <a href="{% url 'favorites' %}">Favoritos</a>
+            <a href="{% url 'cart' %}">Carrinho</a>
+            <a href="{% url 'account' %}">Minha conta</a>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button class="button" type="submit">Sair</button>
+            </form>
+            {% else %}
+            <a class="button" href="{% url 'login' %}">Entrar</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>

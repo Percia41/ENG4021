@@ -1,0 +1,6 @@
+{% comment %}Informações da peça comuns a todos os cards (vitrine, favoritos, minhas peças).{% endcomment %}
+<p class="eyebrow">{{ product.brand|default:'Marca não informada' }}</p>
+<h3>{% if product.is_active %}<a class="product-card-link" href="{% url 'product_detail' product.id %}">{{ product.name }}</a>{% else %}{{ product.name }}{% endif %}</h3>
+{% if product.defeito %}<span class="severity-badge severity-badge--{{ product.severity_band }}">{{ product.severity_label }}</span>{% endif %}
+<p><strong>Defeito:</strong> {{ product.description|truncatechars:140 }}</p>
+{% include 'products/includes/price.html' %}

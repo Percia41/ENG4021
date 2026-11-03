@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FioFora{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'icons/bootstrap-icons.css' %}">
+    <link rel="stylesheet" href="{% static 'css/site.css' %}">
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    {% block body %}
+    {% include 'components/header.html' %}
+    <main class="container">
+        {% include 'components/messages.html' %}
+        {% block content %}{% endblock %}
+    </main>
+    {% endblock %}
+</body>
+</html>

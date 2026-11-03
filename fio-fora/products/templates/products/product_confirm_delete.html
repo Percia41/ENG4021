@@ -1,0 +1,15 @@
+{% extends 'products/base.html' %}
+
+{% block title %}Remover peça | FioFora{% endblock %}
+
+{% block content %}
+<section class="panel panel--narrow">
+    <h1>Remover peça?</h1>
+    <p>Você está prestes a remover <strong>{{ product.name }}</strong> da sua loja e da vitrine.</p>
+    <form method="post" class="form-actions">
+        {% csrf_token %}
+        <button class="button button--danger" type="submit">Sim, remover</button>
+        <a href="{% url 'my_products' %}">Cancelar</a>
+    </form>
+</section>
+{% endblock %}

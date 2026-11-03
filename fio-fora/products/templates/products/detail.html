@@ -1,0 +1,74 @@
+{% extends 'products/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} | FioFora{% endblock %}
+
+{% block content %}
+<a class="page-back" href="{% url 'home' %}"><i class="bi bi-arrow-left" aria-hidden="true"></i> Voltar para a vitrine</a>
+
+<article class="product-detail">
+    <section class="product-gallery" aria-label="Fotos da peça">
+        {% for image in product.images.all %}
+        <figure class="product-photo{% if image.is_defect %} product-photo--defect{% endif %}">
+            <img src="{% static image.image_path %}" alt="{{ image.alt_text }}">
+            {% if image.is_defect %}<figcaption>Close do defeito</figcaption>{% endif %}
+        </figure>
+        {% empty %}
+        <div class="product-photo product-photo--empty">Sem fotos desta peça ainda</div>
+        {% endfor %}
+    </section>
+
+    <section class="product-info">
+        {% if product.brand %}<p class="eyebrow">{{ product.brand }}</p>{% endif %}
+        <h1>{{ product.name }}</h1>
+
+        {% if product.defeito %}
+        <div class="product-badges">
+            <span class="severity-badge severity-badge--{{ product.severity_band }}">Severidade {{ product.severity|floatformat:2 }} · {{ product.severity_label }}</span>
+            {% if product.defeito.is_repairable %}<span class="repair-badge"><i class="bi bi-check-lg" aria-hidden="true"></i> Reparável</span>{% endif %}
+        </div>
+        {% endif %}
+        <p class="worn-note">{% if product.visible_when_worn %}O defeito aparece quando a peça está sendo usada.{% else %}O defeito não aparece quando a peça está sendo usada.{% endif %}</p>
+
+        <section class="defect-card">
+            <h2>Ficha do defeito</h2>
+            {% if product.defeito %}
+            <dl class="defect-grid">
+                <div><dt>Tipo</dt><dd>{{ product.defeito.get_tipo_display }}</dd></div>
+                <div><dt>Localização</dt><dd>{{ product.defeito.get_localizacao_display }}</dd></div>
+                <div>
+                    <dt>Extensão</dt><dd>{{ product.defeito.get_extensao_display }}</dd>
+                    {% if product.defect_measure_cm is not None %}<dd class="field-help">{{ product.defect_measure_cm|floatformat:1 }} cm medidos</dd>{% endif %}
+                </div>
+            </dl>
+            {% endif %}
+            <p>{{ product.description }}</p>
+        </section>
+
+        {% include 'products/includes/price.html' %}
+        {% if product.discount_percent and product.defeito %}<p class="field-help">O desconto é calculado a partir da gravidade do defeito.</p>{% endif %}
+
+        <dl class="product-specs">
+            {% if product.size %}<div><dt>Tamanho</dt><dd>{{ product.size }}</dd></div>{% endif %}
+            {% if product.category %}<div><dt>Categoria</dt><dd>{{ product.category }}</dd></div>{% endif %}
+            {% if product.condition %}<div><dt>Estado</dt><dd>{{ product.condition }}</dd></div>{% endif %}
+            {% if product.measurements %}<div><dt>Medidas</dt><dd>{{ product.measurements }}</dd></div>{% endif %}
+        </dl>
+
+        <div class="product-actions">
+            {% include 'cart/includes/add_button.html' %}
+            {% include 'favorites/includes/favorite_button.html' with is_favorite=product.is_favorite %}
+        </div>
+
+        {% with profile=product.seller.profile %}
+        {% if profile.store_name %}
+        <section class="seller-card">
+            <p class="eyebrow">Vendido por</p>
+            <strong>{{ profile.store_name }}</strong>
+            {% if profile.location %}<span class="field-help">{{ profile.location }}</span>{% endif %}
+        </section>
+        {% endif %}
+        {% endwith %}
+    </section>
+</article>
+{% endblock %}

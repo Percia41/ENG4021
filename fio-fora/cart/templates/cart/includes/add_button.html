@@ -1,0 +1,14 @@
+{% comment %}Botão "Adicionar ao carrinho" da peça (vitrine e página da peça).{% endcomment %}
+<div class="cart-add">
+    {% if product.stock < 1 %}
+    <p class="stock-out">Peça esgotada</p>
+    {% elif user.is_authenticated %}
+    <form method="post" action="{% url 'cart_add' product.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="quantity" value="1">
+        <button class="button" type="submit">Adicionar ao carrinho</button>
+    </form>
+    {% else %}
+    <a class="button" href="{% url 'login' %}">Entrar para comprar</a>
+    {% endif %}
+</div>
