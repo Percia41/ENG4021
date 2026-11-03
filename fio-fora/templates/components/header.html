@@ -1,26 +1,34 @@
+{% with current=request.resolver_match.url_name %}
 <header class="site-header">
     <div class="container site-header__inner">
         <a class="brand-logo" href="{% url 'home' %}" aria-label="FioFora — vitrine">
             {% include 'components/logo.html' %}
         </a>
-        <nav class="site-header__actions" aria-label="Navegação principal">
-            <a href="{% url 'home' %}">Vitrine</a>
-            <a href="{% url 'discount_simulator' %}">Simulador</a>
+
+        <nav class="site-nav" aria-label="Navegação principal">
+            <a href="{% url 'home' %}"{% if current == 'home' %} aria-current="page"{% endif %}>Vitrine</a>
+            <a href="{% url 'discount_simulator' %}"{% if current == 'discount_simulator' %} aria-current="page"{% endif %}>Simulador</a>
             {% if is_seller %}
-            <a href="{% url 'my_products' %}">Minhas peças</a>
-            <a class="button" href="{% url 'product_create' %}">Cadastrar peça</a>
+            <a href="{% url 'my_products' %}"{% if current == 'my_products' %} aria-current="page"{% endif %}>Minhas peças</a>
             {% endif %}
+        </nav>
+
+        <div class="site-actions">
             {% if user.is_authenticated %}
-            <a href="{% url 'favorites' %}">Favoritos</a>
-            <a href="{% url 'cart' %}">Carrinho</a>
-            <a href="{% url 'account' %}">Minha conta</a>
+            <a class="icon-link" href="{% url 'favorites' %}"{% if current == 'favorites' %} aria-current="page"{% endif %}><i class="bi bi-heart" aria-hidden="true"></i><span>Favoritos</span></a>
+            <a class="icon-link" href="{% url 'cart' %}"{% if current == 'cart' %} aria-current="page"{% endif %}><i class="bi bi-bag" aria-hidden="true"></i><span>Carrinho</span></a>
+            <a class="icon-link" href="{% url 'account' %}"{% if current == 'account' %} aria-current="page"{% endif %}><i class="bi bi-person" aria-hidden="true"></i><span>Minha conta</span></a>
             <form action="{% url 'logout' %}" method="post">
                 {% csrf_token %}
-                <button class="button" type="submit">Sair</button>
+                <button class="icon-link" type="submit"><i class="bi bi-box-arrow-right" aria-hidden="true"></i><span>Sair</span></button>
             </form>
+            {% if is_seller %}
+            <a class="button" href="{% url 'product_create' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Cadastrar peça</a>
+            {% endif %}
             {% else %}
             <a class="button" href="{% url 'login' %}">Entrar</a>
             {% endif %}
-        </nav>
+        </div>
     </div>
 </header>
+{% endwith %}
