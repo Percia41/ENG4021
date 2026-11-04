@@ -13,7 +13,7 @@
     <section class="panel">
         <h2>Conte a história da peça</h2>
         <p>Informe o valor original e os três critérios do defeito. Calculamos o preço final ao salvar.</p>
-        <form method="post" class="form-stack">
+        <form method="post" class="form-stack" enctype="multipart/form-data">
             {% csrf_token %}
             {% include 'components/form_fields.html' %}
             <div class="form-actions">

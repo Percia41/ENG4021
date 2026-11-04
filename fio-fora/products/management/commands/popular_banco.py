@@ -11,6 +11,23 @@ from orders.models import Order, OrderItem
 from products.models import Category, Defeito, Product, ProductImage
 
 
+def imagem_de_exemplo(defect):
+    """Gera um JPEG simples para a demonstração, sem baixar nada da internet."""
+    from io import BytesIO
+
+    from django.core.files.base import ContentFile
+    from PIL import Image, ImageDraw
+
+    cor = (164, 87, 63) if defect else (206, 193, 170)
+    imagem = Image.new("RGB", (900, 1200), cor)
+    if defect:
+        desenho = ImageDraw.Draw(imagem)
+        desenho.line([(120, 600), (780, 640)], fill=(238, 232, 220), width=8)
+    buffer = BytesIO()
+    imagem.save(buffer, "JPEG", quality=85)
+    return ContentFile(buffer.getvalue())
+
+
 class Command(BaseCommand):
     help = "Cria dados fictícios da FioFora sem duplicar nem substituir registros existentes."
 
@@ -61,10 +78,13 @@ class Command(BaseCommand):
             Defeito.objects.get_or_create(product=product, defaults={
                 "tipo": kind, "localizacao": location, "extensao": extent})
             for defect in (False, True):
-                path = "products/images/demo-defect.svg" if defect else "products/images/demo-piece.svg"
-                ProductImage.objects.get_or_create(product=product, image_path=path, defaults={
-                    "alt_text": "Ilustração de exemplo do defeito" if defect else "Ilustração de exemplo de peça",
-                    "is_defect": defect})
+                if product.images.filter(is_defect=defect).exists():
+                    continue
+                alt = "Ilustração de exemplo do defeito" if defect else "Ilustração de exemplo de peça"
+                foto = ProductImage(product=product, alt_text=alt, is_defect=defect)
+                foto.image.save(f"demo-{'defeito' if defect else 'peca'}.jpg",
+                                imagem_de_exemplo(defect), save=False)
+                foto.save()
             products.append(product)
         for product in products[:3]:
             Favorite.objects.get_or_create(user=users[0], product=product)

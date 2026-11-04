@@ -1,3 +1,5 @@
+import shutil
+import tempfile
 import re
 from datetime import datetime, timedelta
 from io import StringIO
@@ -7,13 +9,20 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator, default_token_generator
 from django.core import mail
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
 OLD_PASSWORD = 'Senha-antiga-524!'
 NEW_PASSWORD = 'Senha-nova-9817!'
+
+# O popular_banco grava fotos de verdade: mande-as para uma pasta temporária.
+MEDIA_DE_TESTE = tempfile.mkdtemp()
+
+
+def tearDownModule():
+    shutil.rmtree(MEDIA_DE_TESTE, ignore_errors=True)
 
 
 class AuthPageTests(TestCase):
@@ -50,6 +59,7 @@ class AuthPageTests(TestCase):
         self.assertContains(vitrine, 'products/css/products.css')
 
 
+@override_settings(MEDIA_ROOT=MEDIA_DE_TESTE)
 class UserListTests(TestCase):
     @classmethod
     def setUpTestData(cls):

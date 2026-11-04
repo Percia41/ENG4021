@@ -1,4 +1,5 @@
 from decimal import Decimal, ROUND_HALF_UP
+from uuid import uuid4
 
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -129,6 +130,16 @@ class Product(models.Model):
             return None
         return (self.original_price * (1 - Decimal(self.suggested_discount) / 100)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
+    @property
+    def cover_image(self):
+        """Primeira foto da peça (sem ser a do defeito). É a capa do card."""
+        return next((i for i in self.images.all() if not i.is_defect), None)
+
+    @property
+    def defect_image(self):
+        """Foto do defeito. Sem ela a peça não deveria ir para a vitrine."""
+        return next((i for i in self.images.all() if i.is_defect), None)
+
     def __str__(self):
         return self.name
 
@@ -177,16 +188,37 @@ class Defeito(models.Model):
         return self.tipo != 3
 
 
+def product_image_path(instance, filename):
+    """Uma pasta por peça, nome sorteado.
+
+    O nome que o vendedor deu ao arquivo não entra no caminho: além de poder
+    vazar informação (IMG_casa_joao.jpg), duas peças com "frente.jpg" se
+    sobrescreveriam.
+    """
+    extension = filename.rsplit(".", 1)[-1].lower() or "jpg"
+    return f"products/{instance.product_id}/{uuid4().hex}.{extension}"
+
+
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
-    image_path = models.CharField("caminho da foto", max_length=255)
+    image = models.ImageField("foto", upload_to=product_image_path)
     alt_text = models.CharField("descrição da imagem", max_length=160)
     is_defect = models.BooleanField("foto do defeito", default=False)
+    created_at = models.DateTimeField("enviada em", auto_now_add=True)
 
     class Meta:
+        # A foto do defeito vem primeiro: é ela que explica o desconto.
+        ordering = ["-is_defect", "id"]
         verbose_name = "foto de produto"
         verbose_name_plural = "fotos de produtos"
-        constraints = [models.UniqueConstraint(fields=["product", "image_path"], name="unique_product_image")]
+        constraints = [models.UniqueConstraint(fields=["product", "image"], name="unique_product_image")]
 
     def __str__(self):
         return self.alt_text
+
+    def delete(self, *args, **kwargs):
+        """Apagar o registro apaga o arquivo junto, senão o disco enche de
+        imagem órfã que ninguém mais alcança pelo site."""
+        image = self.image
+        super().delete(*args, **kwargs)
+        image.delete(save=False)

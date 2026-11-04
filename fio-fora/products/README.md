@@ -27,7 +27,7 @@ Vitrine, página da peça, cadastro de peças pelo vendedor e simulador de desco
 | `Product` | Peça: nome, descrição, preço original, preço final, estoque, vendedor, categoria |
 | `Defeito` | Tipo, localização e extensão do defeito (de 1 a 3 cada), ligado 1-para-1 à peça |
 | `Category` | Categoria da peça |
-| `ProductImage` | Caminho de uma foto da peça e se ela mostra o defeito |
+| `ProductImage` | Uma foto enviada da peça e se ela mostra o defeito |
 
 ## Severidade e desconto
 
@@ -60,3 +60,32 @@ O desconto vai de 15% (severidade 1) a 50% (severidade 3), arredondado de 5 em
 > **[PRINT]** Tela "Minhas peças" com os botões Editar e Remover.
 
 > **[PRINT]** Simulador de desconto com um resultado calculado.
+
+## Fotos da peça
+
+As fotos são arquivos enviados pelo vendedor (`ImageField`), guardados em
+`MEDIA_ROOT/products/<id da peça>/` com nome sorteado. O nome do arquivo
+original não entra no caminho para não vazar informação do vendedor.
+
+A **foto do defeito é obrigatória**: sem ela o cadastro não é aceito. Na
+galeria e nas miniaturas ela aparece primeiro, porque é a imagem que explica o
+desconto. Peça sem foto da peça continua aparecendo, com um espaço no lugar da
+capa.
+
+Antes de salvar, `services.py` confere cada arquivo abrindo a imagem com o
+Pillow (e não pela extensão, que o navegador escreve):
+
+| Regra | Valor |
+|---|---|
+| Formatos aceitos | JPG, PNG, WebP |
+| Tamanho máximo | 5 MB por arquivo |
+| Lado menor | pelo menos 600 px |
+| Fotos da peça | até 6, além da foto do defeito |
+
+A imagem aprovada é girada pelo EXIF, reduzida a 2000 px no maior lado e tem
+os metadados descartados — foto de celular carrega a coordenada de GPS de onde
+foi tirada.
+
+> **[PRINT]** Formulário de cadastro com os campos de foto da peça e foto do defeito.
+
+> **[PRINT]** Galeria da página da peça, com a foto do defeito em destaque.

@@ -2,7 +2,29 @@ from decimal import Decimal
 
 from django import forms
 
-from .models import Defeito, Product
+from . import services
+from .models import Defeito, Product, ProductImage
+
+
+class MultipleFileInput(forms.ClearableFileInput):
+    """Input de arquivo que aceita vários de uma vez.
+
+    O Django 5 deixou de permitir `multiple` no widget padrão; este widget e o
+    campo abaixo são a receita da documentação oficial.
+    """
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('widget', MultipleFileInput(attrs={'accept': 'image/*'}))
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        clean_one = super().clean
+        if isinstance(data, (list, tuple)):
+            return [clean_one(item, initial) for item in data]
+        return [clean_one(data, initial)] if data else []
 
 
 def discount_preview(original_price, tipo, localizacao, extensao):
@@ -44,10 +66,23 @@ class ProductForm(DefectFieldsMixin, forms.ModelForm):
     O preço final e o vendedor são definidos no servidor, nunca pelo POST:
     o preço vem da severidade do defeito e o vendedor vem da view.
     """
+    photos = MultipleFileField(
+        label='Fotos da peça', required=False,
+        help_text=f'Até {services.MAX_PHOTOS} fotos, {services.FORMAT_NAMES}, '
+                  f'{services.MAX_BYTES // (1024 * 1024)} MB cada, mínimo '
+                  f'{services.MIN_SIDE} px no menor lado. A primeira vira a capa.',
+    )
+    defect_photo = forms.ImageField(
+        label='Foto do defeito', required=False,
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+        help_text='Enquadre o defeito de perto. É a foto que explica o desconto.',
+    )
+
     field_order = [
         'name', 'brand', 'category', 'size', 'condition', 'measurements',
         'description', 'original_price', 'defect_type', 'defect_location',
-        'defect_extent', 'defect_measure_cm', 'visible_when_worn', 'stock', 'is_active',
+        'defect_extent', 'defect_measure_cm', 'visible_when_worn', 'stock',
+        'photos', 'defect_photo', 'is_active',
     ]
 
     class Meta:
@@ -81,6 +116,27 @@ class ProductForm(DefectFieldsMixin, forms.ModelForm):
             raise forms.ValidationError('Informe pelo menos uma peça em estoque.')
         return stock
 
+    def clean_photos(self):
+        """Abre cada arquivo para conferir que é mesmo uma imagem."""
+        uploads = self.cleaned_data.get('photos') or []
+        self._photos = services.validate_images(uploads, 'As fotos da peça')
+        return uploads
+
+    def clean_defect_photo(self):
+        """A foto do defeito é obrigatória enquanto a peça não tiver uma.
+
+        Anunciar defeito sem mostrar o defeito é o que as entrevistas
+        apontaram como motivo de ninguém confiar em brechó online.
+        """
+        upload = self.cleaned_data.get('defect_photo')
+        if not upload:
+            tem_foto = self.instance.pk and self.instance.images.filter(is_defect=True).exists()
+            if not tem_foto:
+                raise forms.ValidationError('Envie a foto do defeito: sem ela a peça não pode ser publicada.')
+            return None
+        self._defect_photo = services.validate_image(upload, 'A foto do defeito')
+        return upload
+
     def clean(self):
         cleaned = super().clean()
         fields = ['original_price', 'defect_type', 'defect_location', 'defect_extent']
@@ -102,4 +158,21 @@ class ProductForm(DefectFieldsMixin, forms.ModelForm):
         if commit:
             product.defeito.product = product
             product.defeito.save()
+            self._save_photos(product)
         return product
+
+    def _save_photos(self, product):
+        """Grava as fotos enviadas. Uma foto do defeito nova substitui a antiga."""
+        for image in getattr(self, '_photos', []):
+            ProductImage.objects.create(
+                product=product, image=image, is_defect=False,
+                alt_text=f'{product.name} — foto da peça'[:160],
+            )
+        defect = getattr(self, '_defect_photo', None)
+        if defect:
+            for old in product.images.filter(is_defect=True):
+                old.delete()
+            ProductImage.objects.create(
+                product=product, image=defect, is_defect=True,
+                alt_text=f'{product.name} — close do defeito'[:160],
+            )

@@ -1,23 +1,48 @@
+import os
+import shutil
+import tempfile
 from decimal import Decimal
-from io import StringIO
+from io import BytesIO, StringIO
 from itertools import product as combinations
 from unittest.mock import PropertyMock, patch
 
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db.models import ProtectedError
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from PIL import Image
 
 from accounts.models import UserProfile
 from cart.models import Cart, CartItem
 from favorites.models import Favorite
 from orders.models import Order, OrderItem
 
+from . import services
 from .forms import ProductForm
 from .models import Category, Defeito, Product, ProductImage
 
 
+# As fotos dos testes vão para uma pasta temporária, não para media/ do projeto.
+MEDIA_DE_TESTE = tempfile.mkdtemp()
+
+
+def tearDownModule():
+    shutil.rmtree(MEDIA_DE_TESTE, ignore_errors=True)
+
+
+def foto(largura=900, altura=1200, formato='JPEG', nome=None):
+    """Gera um arquivo de imagem de verdade, em memória, para os testes de upload."""
+    buffer = BytesIO()
+    Image.new('RGB', (largura, altura), (150, 140, 120)).save(buffer, formato)
+    extensao = {'JPEG': 'jpg', 'PNG': 'png', 'WEBP': 'webp', 'GIF': 'gif'}[formato]
+    buffer.seek(0)
+    return SimpleUploadedFile(nome or f'foto.{extensao}', buffer.read(), f'image/{extensao}')
+
+
+@override_settings(MEDIA_ROOT=MEDIA_DE_TESTE)
 class SellerWorkflowTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -39,7 +64,8 @@ class SellerWorkflowTests(TestCase):
     def data(self, **overrides):
         values = {'name': 'Camisa de linho', 'description': 'Pequena mancha na barra',
             'brand': 'Circular', 'original_price': '100.00', 'defect_type': '1',
-            'defect_location': '3', 'defect_extent': '2', 'stock': '1', 'is_active': 'on'}
+            'defect_location': '3', 'defect_extent': '2', 'stock': '1', 'is_active': 'on',
+            'defect_photo': foto()}
         values.update(overrides)
         return values
 
@@ -152,7 +178,7 @@ class SellerWorkflowTests(TestCase):
             with self.subTest(scores=scores):
                 response = self.client.post(reverse('discount_simulator'), data)
                 result = response.context['result']
-                form = ProductForm(data)
+                form = ProductForm(data, {'defect_photo': foto()})
                 self.assertTrue(form.is_valid(), form.errors)
                 piece = form.save(commit=False)
                 self.assertEqual(result['severity'], piece.severity)
@@ -248,6 +274,7 @@ class FiltroSeveridadeTests(TestCase):
         self.assertContains(response, reverse('product_detail', args=[self.moderada.pk]))
 
 
+@override_settings(MEDIA_ROOT=MEDIA_DE_TESTE)
 class PaginaProdutoTests(TestCase):
     def setUp(self):
         User = get_user_model()
@@ -258,8 +285,8 @@ class PaginaProdutoTests(TestCase):
         self.peca = criar_peca('Calça de linho', 2, 2, 2, price=Decimal('130'), original_price=Decimal('200'),
                                seller=self.vendedor, brand='Ateliê Linha', size='38', condition='Nova com defeito',
                                defect_measure_cm=Decimal('4'), visible_when_worn=True)
-        ProductImage.objects.create(product=self.peca, image_path='products/images/demo-piece.svg', alt_text='Peça inteira')
-        ProductImage.objects.create(product=self.peca, image_path='products/images/demo-defect.svg',
+        ProductImage.objects.create(product=self.peca, image=foto(nome='peca.jpg'), alt_text='Peça inteira')
+        ProductImage.objects.create(product=self.peca, image=foto(nome='defeito.jpg'),
                                     alt_text='Close da mancha', is_defect=True)
         self.url = reverse('product_detail', args=[self.peca.pk])
 
@@ -311,6 +338,7 @@ class PaginaProdutoTests(TestCase):
         self.assertNotContains(response, reverse('cart_add', args=[self.peca.pk]))
 
 
+@override_settings(MEDIA_ROOT=MEDIA_DE_TESTE)
 class PopularBancoTests(TestCase):
     def test_population_is_repeatable_and_preserves_changes(self):
         call_command("popular_banco", stdout=StringIO())
@@ -340,6 +368,7 @@ class PopularBancoTests(TestCase):
             self.assertEqual(product.suggested_price, Decimal(100-discount))
 
 
+@override_settings(MEDIA_ROOT=MEDIA_DE_TESTE)
 class OnDeleteTests(TestCase):
     """Comportamento de exclusão (on_delete) definido nos models."""
 
@@ -355,7 +384,7 @@ class OnDeleteTests(TestCase):
         Defeito.objects.create(product=self.product, tipo=1, localizacao=1, extensao=1)
 
     def test_apagar_peca_apaga_defeito_imagens_favoritos_e_itens_do_carrinho(self):
-        ProductImage.objects.create(product=self.product, image_path="a.jpg", alt_text="foto")
+        ProductImage.objects.create(product=self.product, image=foto(), alt_text="foto")
         Favorite.objects.create(user=self.buyer, product=self.product)
         cart = Cart.objects.create(user=self.buyer)
         CartItem.objects.create(cart=cart, product=self.product)
@@ -404,3 +433,171 @@ class OnDeleteTests(TestCase):
         OrderItem.objects.create(order=order, product=self.product, product_name="Vestido", unit_price=Decimal("80"))
         order.delete()
         self.assertEqual(OrderItem.objects.count(), 0)
+
+
+@override_settings(MEDIA_ROOT=MEDIA_DE_TESTE)
+class FotosDaPecaTests(TestCase):
+    """Envio das fotos no cadastro e exibição na galeria."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.vendedor = get_user_model().objects.create_user(
+            'foto@example.com', email='foto@example.com', password='Strong-test-524!')
+        UserProfile.objects.create(user=cls.vendedor, role='seller')
+
+    def setUp(self):
+        self.client.login(username='foto@example.com', password='Strong-test-524!')
+
+    def dados(self, **ajustes):
+        valores = {'name': 'Camisa com mancha', 'description': 'Mancha na barra',
+                   'brand': 'Circular', 'original_price': '200.00', 'defect_type': '2',
+                   'defect_location': '3', 'defect_extent': '2', 'stock': '1',
+                   'is_active': 'on', 'defect_photo': foto(nome='defeito.jpg')}
+        valores.update(ajustes)
+        return valores
+
+    def cadastrar(self, **ajustes):
+        return self.client.post(reverse('product_create'), self.dados(**ajustes))
+
+    # ---------------- cadastro ----------------
+
+    def test_cadastro_grava_as_fotos_e_marca_a_do_defeito(self):
+        self.assertRedirects(self.cadastrar(photos=[foto(), foto()]), reverse('my_products'))
+        peca = Product.objects.get(name='Camisa com mancha')
+        self.assertEqual(peca.images.count(), 3)
+        self.assertEqual(peca.images.filter(is_defect=True).count(), 1)
+        self.assertIsNotNone(peca.cover_image)
+        self.assertIsNotNone(peca.defect_image)
+
+    def test_cadastro_sem_foto_do_defeito_e_recusado(self):
+        dados = self.dados()
+        dados.pop('defect_photo')
+        response = self.client.post(reverse('product_create'), dados)
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response.context['form'], 'defect_photo',
+                             'Envie a foto do defeito: sem ela a peça não pode ser publicada.')
+        self.assertFalse(Product.objects.filter(name='Camisa com mancha').exists())
+
+    def test_cadastro_so_com_a_foto_do_defeito_funciona(self):
+        self.assertRedirects(self.cadastrar(), reverse('my_products'))
+        peca = Product.objects.get(name='Camisa com mancha')
+        self.assertEqual(peca.images.count(), 1)
+        self.assertIsNone(peca.cover_image)
+
+    # ---------------- arquivos recusados ----------------
+
+    def test_arquivo_que_nao_e_imagem_e_recusado(self):
+        falso = SimpleUploadedFile('virus.jpg', b'isto nao e uma imagem', 'image/jpeg')
+        response = self.cadastrar(photos=[falso])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ProductImage.objects.count(), 0)
+
+    def test_formato_fora_da_lista_e_recusado(self):
+        with self.assertRaises(ValidationError):
+            services.validate_image(foto(800, 800, 'GIF'))
+
+    def test_arquivo_acima_do_limite_e_recusado(self):
+        grande = foto(700, 700)
+        grande.size = services.MAX_BYTES + 1
+        with self.assertRaisesMessage(ValidationError, 'limite'):
+            services.validate_image(grande)
+
+    def test_imagem_pequena_demais_e_recusada(self):
+        with self.assertRaisesMessage(ValidationError, str(services.MIN_SIDE)):
+            services.validate_image(foto(300, 300))
+
+    def test_fotos_demais_sao_recusadas(self):
+        demais = [foto(nome=f'f{i}.jpg') for i in range(services.MAX_PHOTOS + 1)]
+        response = self.cadastrar(photos=demais)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ProductImage.objects.count(), 0)
+
+    def test_erros_de_varias_fotos_vem_juntos(self):
+        with self.assertRaises(ValidationError) as erro:
+            services.validate_images([foto(200, 200), foto(300, 300)])
+        self.assertEqual(len(erro.exception.messages), 2)
+
+    # ---------------- preparo da imagem ----------------
+
+    def test_imagem_grande_e_reduzida(self):
+        preparada = services.validate_image(foto(3000, 4000))
+        with Image.open(preparada) as imagem:
+            self.assertLessEqual(max(imagem.size), services.MAX_SIDE)
+
+    def test_metadados_sao_descartados(self):
+        """Foto de celular carrega GPS; isso não pode ir para a internet."""
+        buffer = BytesIO()
+        Image.new('RGB', (900, 900), (90, 90, 90)).save(buffer, 'JPEG', exif=Image.Exif().tobytes())
+        buffer.seek(0)
+        preparada = services.validate_image(
+            SimpleUploadedFile('celular.jpg', buffer.read(), 'image/jpeg'))
+        with Image.open(preparada) as imagem:
+            self.assertFalse(imagem.getexif())
+
+    def test_nome_enviado_nao_entra_no_caminho(self):
+        self.cadastrar(photos=[foto(nome='minha_casa_familia.jpg')])
+        peca = Product.objects.get(name='Camisa com mancha')
+        self.assertNotIn('minha_casa_familia', peca.cover_image.image.name)
+        self.assertIn(f'products/{peca.pk}/', peca.cover_image.image.name)
+
+    # ---------------- edição ----------------
+
+    def test_editar_sem_nova_foto_mantem_a_do_defeito(self):
+        self.cadastrar()
+        peca = Product.objects.get(name='Camisa com mancha')
+        antiga = peca.defect_image.image.name
+        dados = self.dados(name='Camisa editada')
+        dados.pop('defect_photo')
+        self.assertRedirects(
+            self.client.post(reverse('product_update', args=[peca.pk]), dados),
+            reverse('my_products'))
+        peca.refresh_from_db()
+        self.assertEqual(peca.name, 'Camisa editada')
+        self.assertEqual(peca.defect_image.image.name, antiga)
+
+    def test_nova_foto_do_defeito_substitui_a_antiga(self):
+        self.cadastrar()
+        peca = Product.objects.get(name='Camisa com mancha')
+        antiga = peca.defect_image.image.name
+        self.client.post(reverse('product_update', args=[peca.pk]),
+                         self.dados(defect_photo=foto(nome='nova.jpg')))
+        self.assertEqual(peca.images.filter(is_defect=True).count(), 1)
+        self.assertNotEqual(peca.defect_image.image.name, antiga)
+
+    # ---------------- arquivo no disco ----------------
+
+    def test_apagar_a_foto_apaga_o_arquivo(self):
+        self.cadastrar()
+        imagem = Product.objects.get(name='Camisa com mancha').defect_image
+        caminho = imagem.image.path
+        self.assertTrue(os.path.exists(caminho))
+        imagem.delete()
+        self.assertFalse(os.path.exists(caminho))
+
+    # ---------------- galeria ----------------
+
+    def test_galeria_mostra_a_foto_do_defeito_primeiro(self):
+        self.cadastrar(photos=[foto(), foto()])
+        peca = Product.objects.get(name='Camisa com mancha')
+        self.assertTrue(peca.images.first().is_defect)
+
+    def test_pagina_da_peca_usa_o_arquivo_enviado(self):
+        self.cadastrar(photos=[foto()])
+        peca = Product.objects.get(name='Camisa com mancha')
+        response = self.client.get(reverse('product_detail', args=[peca.pk]))
+        self.assertContains(response, peca.defect_image.image.url)
+        self.assertContains(response, 'Close do defeito')
+
+    def test_card_mostra_a_capa_e_o_aviso_de_peca_sem_foto(self):
+        self.cadastrar(photos=[foto()])
+        com_foto = Product.objects.get(name='Camisa com mancha')
+        sem_foto = criar_peca('Saia sem foto', seller=self.vendedor, original_price=Decimal('100'))
+        response = self.client.get(reverse('my_products'))
+        self.assertContains(response, com_foto.cover_image.image.url)
+        self.assertContains(response, 'Sem foto da peça')
+        self.assertEqual(sem_foto.cover_image, None)
+
+    def test_formulario_aceita_envio_de_arquivo(self):
+        """Sem enctype multipart o navegador não envia foto nenhuma."""
+        response = self.client.get(reverse('product_create'))
+        self.assertContains(response, 'enctype="multipart/form-data"')

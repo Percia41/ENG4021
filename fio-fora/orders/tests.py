@@ -1,9 +1,11 @@
+import shutil
+import tempfile
 from decimal import Decimal
 from io import StringIO
 
 from django.core.management import call_command
 from django.db import IntegrityError, transaction
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from cart.models import CartItem
 from favorites.models import Favorite
@@ -11,7 +13,15 @@ from products.models import Defeito, Product
 
 from .models import Order
 
+# O popular_banco grava fotos de verdade: mande-as para uma pasta temporária.
+MEDIA_DE_TESTE = tempfile.mkdtemp()
 
+
+def tearDownModule():
+    shutil.rmtree(MEDIA_DE_TESTE, ignore_errors=True)
+
+
+@override_settings(MEDIA_ROOT=MEDIA_DE_TESTE)
 class OrderHistoryTests(TestCase):
     @classmethod
     def setUpTestData(cls):

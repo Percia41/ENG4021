@@ -39,7 +39,8 @@ def discount_simulator(request):
 
 @seller_required
 def my_products(request):
-    products = Product.objects.filter(seller=request.user).select_related('defeito').order_by('-created_at', '-pk')
+    products = (Product.objects.filter(seller=request.user)
+                .select_related('defeito').prefetch_related('images').order_by('-created_at', '-pk'))
     page = Paginator(products, 12).get_page(request.GET.get('page'))
     return render(request, 'products/my_products.html', {'page_obj': page})
 
@@ -67,7 +68,8 @@ def product_delete(request, product_id):
 
 def product_form(request, product, title, success_message):
     """Cadastro e edição usam o mesmo formulário e o mesmo template."""
-    form = ProductForm(request.POST if request.method == 'POST' else None, instance=product)
+    form = ProductForm(request.POST if request.method == 'POST' else None,
+                       request.FILES if request.method == 'POST' else None, instance=product)
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, success_message)

@@ -10,7 +10,7 @@
     <section class="product-gallery" aria-label="Fotos da peça">
         {% for image in product.images.all %}
         <figure class="product-photo{% if image.is_defect %} product-photo--defect{% endif %}">
-            <img src="{% static image.image_path %}" alt="{{ image.alt_text }}">
+            <img src="{{ image.image.url }}" alt="{{ image.alt_text }}">
             {% if image.is_defect %}<figcaption>Close do defeito</figcaption>{% endif %}
         </figure>
         {% empty %}
