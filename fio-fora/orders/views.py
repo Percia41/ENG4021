@@ -5,6 +5,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from accounts.decorators import buyer_required
 from cart.services import build_cart_summary
+from reviews.services import attach_review_forms
 
 from .models import Order
 from .services import CheckoutError, checkout_cart
@@ -43,4 +44,5 @@ def order_detail(request, order_id):
     order = get_object_or_404(
         Order.objects.prefetch_related('items'), pk=order_id, user=request.user,
     )
-    return render(request, 'orders/detail.html', {'order': order})
+    items = attach_review_forms(list(order.items.all()))
+    return render(request, 'orders/detail.html', {'order': order, 'items': items})
