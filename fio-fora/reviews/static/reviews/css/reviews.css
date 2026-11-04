@@ -1,0 +1,19 @@
+/* Avaliações: formulário no pedido, lista na peça e nota da loja. */
+.stars { color: #b65f46; letter-spacing: 2px; }
+
+.item-review { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.item-review summary { color: var(--green); font-weight: 700; cursor: pointer; }
+.item-review form { margin-top: 14px; }
+.item-review-summary { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+
+.product-reviews { margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--line); }
+.product-reviews h2 { margin: 0 0 12px; color: var(--green); font: 400 28px/1.2 Georgia, serif; }
+.rating-summary { margin: 0 0 18px; color: var(--muted); }
+.rating-summary strong { color: var(--ink); font-size: 22px; }
+.review-list { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.review { padding: 16px 18px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-medium); }
+.review p { margin: 0; }
+.review-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.review-comment { margin-top: 8px; line-height: 1.6; overflow-wrap: anywhere; }
+
+.seller-rating { margin: 0; font-size: 14px; }

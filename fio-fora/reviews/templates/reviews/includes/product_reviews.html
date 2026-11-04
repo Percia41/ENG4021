@@ -1,0 +1,17 @@
+{% comment %}Nota média e avaliações recentes de uma peça. Espera "rating" (average, count) e "reviews".{% endcomment %}
+<section class="product-reviews" aria-labelledby="reviews-heading">
+    <h2 id="reviews-heading">Avaliações</h2>
+    {% if rating.count %}
+    <p class="rating-summary"><strong>{{ rating.average|floatformat:1 }}</strong> de 5 · {{ rating.count }} avaliaç{{ rating.count|pluralize:'ão,ões' }}</p>
+    <ul class="review-list">
+        {% for review in reviews %}
+        <li class="review">
+            <p class="review-head"><span class="stars" aria-label="Nota {{ review.rating }} de 5">{{ review.stars }}</span> <strong>{{ review.reviewer_name }}</strong> <span class="field-help">{{ review.created_at|date:'d/m/Y' }}</span></p>
+            {% if review.comment %}<p class="review-comment">{{ review.comment|linebreaksbr }}</p>{% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="field-help">Ainda sem avaliações.</p>
+    {% endif %}
+</section>

@@ -11,6 +11,7 @@ urlpatterns = [
     path('', include('cart.urls')),
     path('', include('orders.urls')),
     path('', include('favorites.urls')),
+    path('', include('reviews.urls')),
 ]
 
 # Em desenvolvimento o próprio Django entrega as fotos enviadas.

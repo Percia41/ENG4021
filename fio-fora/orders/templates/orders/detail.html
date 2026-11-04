@@ -14,7 +14,7 @@
 
 <section class="order-card order-receipt" aria-labelledby="items-heading">
     <h2 id="items-heading">Resumo da compra</h2>
-    {% for item in order.items.all %}
+    {% for item in items %}
     <article class="order-item">
         <div>
             <h3>{{ item.product_name }}</h3>
@@ -22,6 +22,7 @@
         </div>
         <strong class="order-price">R$ {{ item.subtotal|floatformat:2 }}</strong>
     </article>
+    {% include 'reviews/includes/item_review.html' %}
     {% endfor %}
     <dl class="order-totals">
         <div class="order-total"><dt>Total do pedido</dt><dd>R$ {{ order.total|floatformat:2 }}</dd></div>

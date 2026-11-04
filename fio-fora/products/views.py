@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.decorators import seller_required
 from favorites.models import mark_favorites
+from reviews.services import product_reviews, rating_summary, store_reviews
 
 from .forms import DiscountSimulationForm, ProductForm
 from .models import FAIXAS_SEVERIDADE, Product
@@ -28,7 +29,13 @@ def product_detail(request, product_id):
     products = (Product.objects.filter(is_active=True)
                 .select_related('defeito', 'category', 'seller__profile').prefetch_related('images'))
     product = get_object_or_404(mark_favorites(products, request.user), id=product_id)
-    return render(request, 'products/detail.html', {'product': product})
+    reviews = product_reviews(product)
+    return render(request, 'products/detail.html', {
+        'product': product,
+        'rating': rating_summary(reviews),
+        'reviews': reviews[:10],  # só as mais recentes
+        'store_rating': rating_summary(store_reviews(product.seller)) if product.seller else None,
+    })
 
 
 def discount_simulator(request):

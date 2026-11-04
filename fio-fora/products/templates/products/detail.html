@@ -66,9 +66,16 @@
             <p class="eyebrow">Vendido por</p>
             <strong>{{ profile.store_name }}</strong>
             {% if profile.location %}<span class="field-help">{{ profile.location }}</span>{% endif %}
+            {% if store_rating.count %}
+            <p class="seller-rating"><span class="stars" aria-hidden="true">★</span> <strong>{{ store_rating.average|floatformat:1 }}</strong> de 5 na loja · {{ store_rating.count }} avaliaç{{ store_rating.count|pluralize:'ão,ões' }}</p>
+            {% else %}
+            <span class="field-help">Loja ainda sem avaliações</span>
+            {% endif %}
         </section>
         {% endif %}
         {% endwith %}
     </section>
 </article>
+
+{% include 'reviews/includes/product_reviews.html' %}
 {% endblock %}
