@@ -1,27 +1,23 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import authenticate, get_user_model
-from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, SetPasswordForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from core.models import UserProfile
+from .models import UserProfile
 
 
 class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(label='E-mail', max_length=150, widget=forms.EmailInput(attrs={
-        'class': 'form-control', 'autocomplete': 'email', 'autofocus': True,
+        'autocomplete': 'email', 'autofocus': True,
     }))
     remember = forms.BooleanField(label='Lembrar de mim', required=False, initial=True)
     error_messages = {
         'invalid_login': 'E-mail ou senha inválidos. Confira os dados e tente novamente.',
         'inactive': 'E-mail ou senha inválidos. Confira os dados e tente novamente.',
     }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['password'].widget.attrs['class'] = 'form-control'
 
     def clean(self):
         email = self.cleaned_data.get('username')
@@ -48,9 +44,6 @@ class BuyerRegistrationForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            if not isinstance(field.widget, forms.CheckboxInput):
-                field.widget.attrs['class'] = 'form-control'
         self.fields['name'].widget.attrs['autocomplete'] = 'name'
         self.fields['email'].widget.attrs['autocomplete'] = 'email'
         self.fields['phone'].widget.attrs['autocomplete'] = 'tel'
@@ -153,7 +146,6 @@ class AccountProfileForm(forms.Form):
         self.initial.setdefault('store_name', self.profile.store_name if self.profile else '')
         self.initial.setdefault('location', self.profile.location if self.profile else '')
         for field in self.fields.values():
-            field.widget.attrs['class'] = 'form-control'
             field.widget.attrs['autocomplete'] = 'off'
         self.fields['name'].widget.attrs['autocomplete'] = 'name'
         self.fields['email'].widget.attrs['autocomplete'] = 'email'
@@ -191,18 +183,3 @@ class AccountProfileForm(forms.Form):
         self.profile.location = self.cleaned_data['location'].strip()
         self.profile.save()
         return self.user
-
-
-class EmailPasswordResetForm(PasswordResetForm):
-    """Pede o e-mail da conta; o Django só envia se existir uma conta ativa com ele."""
-    email = forms.EmailField(label='E-mail', max_length=150, widget=forms.EmailInput(attrs={
-        'class': 'form-control', 'autocomplete': 'email', 'autofocus': True, 'placeholder': 'voce@exemplo.com',
-    }))
-
-
-class StyledSetPasswordForm(SetPasswordForm):
-    """Tela de nova senha, com os mesmos estilos dos demais formulários."""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs['class'] = 'form-control'

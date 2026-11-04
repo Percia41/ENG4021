@@ -1,0 +1,39 @@
+{% extends 'products/base.html' %}
+
+{% block title %}Minhas peças | FioFora{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <p class="eyebrow">Área do vendedor</p>
+    <h1>Minhas <em>peças.</em></h1>
+    <p>Gerencie as peças que você cadastrou e acompanhe os valores dos seus anúncios.</p>
+</section>
+
+<div class="section-heading">
+    <h2>{{ page_obj.paginator.count }} peça{{ page_obj.paginator.count|pluralize:"s" }} cadastrada{{ page_obj.paginator.count|pluralize:"s" }}</h2>
+    <a class="button" href="{% url 'product_create' %}">Cadastrar peça</a>
+</div>
+
+{% if page_obj %}
+<section class="product-grid">
+    {% for product in page_obj %}
+    <article class="product-card">
+        <p class="piece-status">{% if product.is_active %}Na vitrine{% else %}Inativa{% endif %}</p>
+        {% include 'products/includes/card_info.html' %}
+        <p class="field-help">{% if product.size %}Tamanho {{ product.size }} · {% endif %}estoque: {{ product.stock }}</p>
+        <div class="card-actions">
+            <a href="{% url 'product_update' product.id %}">Editar</a>
+            <a class="danger-link" href="{% url 'product_delete' product.id %}">Remover</a>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% include 'components/pagination.html' %}
+{% else %}
+<section class="empty-state">
+    <h2>Sua próxima história começa aqui.</h2>
+    <p>Você ainda não cadastrou peças. Cadastre a primeira e dê uma nova chance à moda.</p>
+    <a class="button" href="{% url 'product_create' %}">Cadastrar primeira peça</a>
+</section>
+{% endif %}
+{% endblock %}

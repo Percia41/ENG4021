@@ -1,0 +1,6 @@
+/* Estilos usados em todas as páginas. Cada app carrega o seu CSS por cima deste. */
+@import url("variables.css");
+@import url("reset.css");
+@import url("logo.css");
+@import url("controls.css");
+@import url("layout.css");

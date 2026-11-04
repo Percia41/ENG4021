@@ -1,0 +1,11 @@
+{% comment %}
+Renderiza todos os campos de um formulário. Use com:
+{% include 'components/form_fields.html' %}
+Para pular um campo: {% include 'components/form_fields.html' with exclude_field='nome' %}
+{% endcomment %}
+{% if form.non_field_errors %}
+<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>
+{% endif %}
+{% for field in form %}
+{% if field.name != exclude_field %}{% include 'components/field.html' %}{% endif %}
+{% endfor %}

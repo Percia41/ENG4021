@@ -164,7 +164,7 @@
     gap: 17px 16px;
 }
 
-.account-fields .form-control {
+.account-fields input {
     min-height: 44px;
     padding: 10px 13px;
 }
@@ -179,25 +179,6 @@
     justify-content: flex-end;
     gap: 10px;
     padding-top: 2px;
-}
-
-.button--secondary {
-    color: var(--ink);
-    background: var(--white);
-    border: 1px solid var(--line);
-}
-
-.button--secondary:hover {
-    background: #efebe4;
-}
-
-.account-message {
-    margin: 0 0 14px;
-    padding: 12px 15px;
-    color: var(--green);
-    background: #e8ece5;
-    border-radius: var(--radius-medium);
-    font-size: 14px;
 }
 
 @media (max-width: 760px) {

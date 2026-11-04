@@ -1,0 +1,339 @@
+/* Telas de entrada: login, cadastro e recuperação de senha. */
+.safe-label,
+.back-link {
+    color: #575b53;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.safe-label i {
+    margin-right: 5px;
+}
+
+.auth-layout {
+    display: grid;
+    min-height: 100vh;
+    grid-template-columns: minmax(440px, 0.94fr) minmax(520px, 1.06fr);
+}
+
+.brand-panel {
+    min-height: 100vh;
+    padding: 18px;
+    color: var(--white);
+    background:
+        linear-gradient(180deg, rgba(56, 75, 55, 0.34) 0%, rgba(32, 47, 38, 0.88) 100%),
+        url("../images/clothing-rack.jpg") center / cover no-repeat;
+}
+
+.brand-panel__frame {
+    position: relative;
+    height: calc(100vh - 36px);
+    min-height: 650px;
+    padding: 28px;
+    border: 1px dashed rgba(255, 255, 255, 0.36);
+    border-radius: var(--radius-large);
+}
+
+.brand-message {
+    position: absolute;
+    right: 28px;
+    bottom: 24px;
+    left: 28px;
+    max-width: 590px;
+}
+
+.brand-panel .brand-logo {
+    padding: 8px 14px;
+    background: rgba(255, 253, 248, 0.82);
+    border-radius: var(--radius-medium);
+}
+
+.eyebrow {
+    margin: 0 0 8px;
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.eyebrow--coral {
+    color: #d87658;
+}
+
+.brand-message__title {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(44px, 4vw, 68px);
+    font-weight: 400;
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+}
+
+.brand-message__text {
+    max-width: 525px;
+    margin: 22px 0 0;
+    color: rgba(255, 255, 255, 0.83);
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.form-panel {
+    position: relative;
+    display: grid;
+    min-height: 100vh;
+    padding: 30px clamp(38px, 7vw, 130px);
+    background: var(--paper);
+}
+
+.form-panel__top {
+    position: absolute;
+    top: 46px;
+    right: clamp(38px, 7vw, 130px);
+}
+
+.form-panel__content {
+    display: grid;
+    place-items: center;
+    width: 100%;
+}
+
+.form-card {
+    width: min(100%, 610px);
+}
+
+.form-card h1 {
+    max-width: 650px;
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(38px, 3.2vw, 58px);
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: -0.045em;
+}
+
+.form-intro {
+    margin: 14px 0 32px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.form-row a,
+.form-switch a {
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.form-row .password-reset-link {
+    font-size: 11px;
+    font-weight: 400;
+    text-decoration: underline;
+}
+
+.form-switch {
+    margin: 25px 0;
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+}
+
+.account-form {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.account-option {
+    position: relative;
+    display: grid;
+    min-height: 78px;
+    grid-template-columns: 44px 1fr 20px;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    background: rgba(255, 255, 255, 0.28);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-medium);
+    cursor: pointer;
+}
+
+.account-selector {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#account-buyer:checked ~ label[for="account-buyer"],
+#account-seller:checked ~ label[for="account-seller"],
+#account-brand:checked ~ label[for="account-brand"] {
+    border-color: var(--green);
+    box-shadow: inset 0 0 0 1px var(--green);
+}
+
+#account-buyer:focus-visible ~ label[for="account-buyer"],
+#account-seller:focus-visible ~ label[for="account-seller"],
+#account-brand:focus-visible ~ label[for="account-brand"] {
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+}
+
+.account-option__icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    background: #ebe8e0;
+    border-radius: var(--radius-small);
+    font-size: 18px;
+}
+
+.account-option__text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.account-option__text strong {
+    font-size: 14px;
+}
+
+.account-option__text small {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.radio-mark {
+    width: 18px;
+    height: 18px;
+    border: 1px solid #bbb8b0;
+    border-radius: 50%;
+}
+
+#account-buyer:checked ~ label[for="account-buyer"] .radio-mark,
+#account-seller:checked ~ label[for="account-seller"] .radio-mark,
+#account-brand:checked ~ label[for="account-brand"] .radio-mark {
+    border: 5px solid var(--paper);
+    outline: 1px solid var(--green);
+    background: var(--green);
+}
+
+.account-actions .button {
+    display: none;
+}
+
+#account-buyer:checked ~ .account-actions .continue-buyer,
+#account-seller:checked ~ .account-actions .continue-seller,
+#account-brand:checked ~ .account-actions .continue-brand {
+    display: flex;
+}
+
+.account-actions .button {
+    width: 150px;
+    margin-top: 10px;
+}
+
+@media (max-width: 520px) {
+    .account-option {
+        grid-template-columns: 38px 1fr 18px;
+        padding: 12px;
+    }
+
+    .account-option__text small {
+        line-height: 1.35;
+    }
+}
+
+.form-card--compact {
+    width: min(100%, 520px);
+}
+
+.feature-icon {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 30px;
+    place-items: center;
+    background: #ebe8e0;
+    border-radius: var(--radius-small);
+    font-size: 20px;
+}
+
+@media (max-width: 1050px) {
+    .auth-layout {
+        grid-template-columns: 40% 60%;
+    }
+
+    .brand-message__title {
+        font-size: 42px;
+    }
+
+    .form-panel {
+        padding-right: 50px;
+        padding-left: 50px;
+    }
+}
+
+@media (max-width: 760px) {
+    .auth-layout {
+        display: block;
+    }
+
+    .brand-panel {
+        min-height: 420px;
+    }
+
+    .brand-panel__frame {
+        height: 384px;
+        min-height: 0;
+    }
+
+    .brand-message__title {
+        font-size: 39px;
+    }
+
+    .brand-message__text {
+        display: none;
+    }
+
+    .form-panel {
+        min-height: auto;
+        padding: 110px 24px 70px;
+    }
+
+    .form-panel__top {
+        top: 40px;
+        right: 24px;
+    }
+
+    .form-card h1 {
+        font-size: 42px;
+    }
+}
+
+@media (max-width: 520px) {
+    .brand-panel {
+        min-height: 330px;
+        padding: 10px;
+    }
+
+    .brand-panel__frame {
+        height: 310px;
+        padding: 20px;
+    }
+
+    .brand-message {
+        right: 20px;
+        bottom: 22px;
+        left: 20px;
+    }
+
+    .brand-message__title {
+        font-size: 34px;
+    }
+}
